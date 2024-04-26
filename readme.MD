@@ -4,9 +4,12 @@
   </a>
 </p>
 
-# ts-sdk
+# Pizza Starter
 
-Included is a pre-configured TypeScript/JavaScript SDK project with a few base functions that the user can run. It compiles TypeScript files from the root directory into JavaScript files in the `dist` directory. It includes a script to compile and run the project.
+This tool is meant to be a starting point for customer utilizing commercetools to power pizza screens. A pizza screen can have multiple uses such as:
+
+- Used by a pizza making team to read incoming orders and build pizzas.
+- Used by a dispatcher to know which orders are ready to go out for delivery.
 
 ## Dependencies
 
