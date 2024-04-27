@@ -6,25 +6,31 @@ const createCart = () => {
         body: {
             currency: "USD",
             store: {
-                key: "data-model-uriel",
+                key: "pizza-palace-1",
                 typeId: "store"
             },
             lineItems: [
                 {
-                    sku: "WF-100",
-                    quantity: 400,
+                    sku: "pizza",
+                    quantity: 6,
                     distributionChannel: {
-                        key: "data-model-uriel-channel",
+                        key: "pizza-palace-1",
                         typeId: "channel"
                     },
                     supplyChannel: {
-                        key: "data-model-uriel-channel",
+                        key: "pizza-palace-1",
                         typeId: "channel"
                     },
                     inventoryMode: "ReserveOnOrder"
                 }
             ],
             shippingAddress: {
+                country: "US",
+                state: "Texas"
+            },
+            billingAddress: {
+                firstName: "Loyal",
+                lastName: "Customer",
                 country: "US"
             }
         }
@@ -39,19 +45,23 @@ const createOrder = (cartId, version) => {
             cart: {
                 typeId: "cart",
                 id: cartId
+            },
+            state: {
+                typeId: "state",
+                key: "prepping"
             }
         }
     }).execute();
 };
 
 // Function that orchestrates the creation of a cart and then creates an order from that cart
-const createStoreCartAndOrder = () => {
+const orderNoPayment = () => {
     return createCart()
-        .then(response => {
-            const { id: cartId, version } = response.body;
-            return createOrder(cartId, version);
+        .then(cartResponse => {
+            const { id: cartId, version: cartVersion } = cartResponse.body;
+            return createOrder(cartId, cartVersion);
         });
 };
 
 // Exporting the orchestration function
-export { createStoreCartAndOrder };
+export { orderNoPayment };

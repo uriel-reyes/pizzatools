@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.createCartAndOrder = void 0;
 var BuildClient_1 = require("../src/BuildClient");
 // Function to create an order from a cart
 var createOrder = function (cartId, version) {
@@ -43,4 +44,4 @@ var createCartAndOrder = function () {
         return createOrder(cartId, version);
     });
 };
-exports.default = createCartAndOrder;
+exports.createCartAndOrder = createCartAndOrder;

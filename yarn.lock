@@ -48,10 +48,10 @@
     "node-fetch" "^2.6.1"
     "uuid" "9.0.0"
 
-"@types/node@^20.11.25":
-  "integrity" "sha512-TBHyJxk2b7HceLVGFcpAUjsa5zIdsPWlR6XHfyGzd0SFu+/NFgQgMAl96MSDZgQDvJAvV6BKsFOrt6zIL09JDw=="
-  "resolved" "https://registry.npmjs.org/@types/node/-/node-20.11.25.tgz"
-  "version" "20.11.25"
+"@types/node@^20.12.7":
+  "integrity" "sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg=="
+  "resolved" "https://registry.npmjs.org/@types/node/-/node-20.12.7.tgz"
+  "version" "20.12.7"
   dependencies:
     "undici-types" "~5.26.4"
 
@@ -102,10 +102,10 @@
   "resolved" "https://registry.npmjs.org/tr46/-/tr46-0.0.3.tgz"
   "version" "0.0.3"
 
-"typescript@^5.4.2":
-  "integrity" "sha512-+2/g0Fds1ERlP6JsakQQDXjZdZMM+rqpamFZJEKh4kwTIn3iDkgKtby0CeNd5ATNZ4Ry1ax15TMx0W2V+miizQ=="
-  "resolved" "https://registry.npmjs.org/typescript/-/typescript-5.4.2.tgz"
-  "version" "5.4.2"
+"typescript@^5.4.5":
+  "integrity" "sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ=="
+  "resolved" "https://registry.npmjs.org/typescript/-/typescript-5.4.5.tgz"
+  "version" "5.4.5"
 
 "undici-types@~5.26.4":
   "integrity" "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="
