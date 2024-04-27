@@ -6,9 +6,10 @@
 
 # Pizza Starter
 
-This tool is meant to be a starting point for customer utilizing commercetools to power pizza screens. A pizza screen can have multiple uses such as:
+This tool is meant to be a starting point for customers utilizing commercetools to power pizza operations and screens. A pizza screen can have multiple uses such as:
 
 - Used by a pizza making team to read incoming orders and build pizzas.
+- Used to keep a customer informed about the status of their order.
 - Used by a dispatcher to know which orders are ready to go out for delivery.
 
 ## Dependencies
