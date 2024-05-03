@@ -14,7 +14,7 @@ var createCart = function () {
             lineItems: [
                 {
                     sku: "pizza",
-                    quantity: 2,
+                    quantity: 1,
                     distributionChannel: {
                         key: "pizza-palace-1",
                         typeId: "channel"
@@ -31,7 +31,32 @@ var createCart = function () {
                         },
                         fields: {
                             "Ingredients": [
-                                "cheese"
+                                "cheese",
+                                "pepperoni"
+                            ]
+                        }
+                    }
+                },
+                {
+                    sku: "pizza",
+                    quantity: 1,
+                    distributionChannel: {
+                        key: "pizza-palace-1",
+                        typeId: "channel"
+                    },
+                    supplyChannel: {
+                        key: "pizza-palace-1",
+                        typeId: "channel"
+                    },
+                    inventoryMode: "ReserveOnOrder",
+                    custom: {
+                        type: {
+                            typeId: "type",
+                            key: "lineitemtype",
+                        },
+                        fields: {
+                            "Ingredients": [
+                                "cheese", "mushroom", "bacon", "ham"
                             ]
                         }
                     }

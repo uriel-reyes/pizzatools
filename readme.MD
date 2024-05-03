@@ -38,6 +38,30 @@ Will need a custom type similar to what's modeled below:
                 {
                     "key":"pepperoni",
                     "label":"pepperoni"
+                },
+                {
+                    "key": "ham",
+                    "label": "Ham"
+                },
+                {
+                     "key": "bacon",
+                     "label": "Bacon"
+                },
+                {
+                     "key": "mushroom",
+                     "label": "Mushroom"
+                },
+                {
+                    "key": "pineapple",
+                    "label": "Pineapple"
+                },
+                {
+                    "key": "jalapeno",
+                    "label": "Jalapeño"
+                },
+                {
+                     "key": "onion",
+                     "label": "Onion"
                 }
                 ]
             }
