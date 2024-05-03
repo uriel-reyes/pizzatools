@@ -21,7 +21,19 @@ const createCart = () => {
                         key: "pizza-palace-1",
                         typeId: "channel"
                     },
-                    inventoryMode: "ReserveOnOrder"
+                    inventoryMode: "ReserveOnOrder",
+                    custom:{
+                        type:{
+                            typeId:"type",
+                            key:"lineitemtype",
+                        },
+                        fields:{
+                            "Ingredients":[
+                                "cheese",
+                                "pepperoni"
+                            ]
+                        }
+                    }
                 }
             ],
             shippingAddress: {
