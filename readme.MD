@@ -12,6 +12,45 @@ This tool is meant to be a starting point for customers utilizing commercetools 
 - Used to keep a customer informed about the status of their order.
 - Used by a dispatcher to know which orders are ready to go out for delivery.
 
+## Configuration
+
+Will need a custom type similar to what's modeled below:
+
+{
+  "key" : "lineitemtype",
+  "name" : {
+    "en" : "Pizza Information"
+  },
+  "description" : {
+    "en" : "Used to store temperature, ingredients and other information related to a pizza."
+  },
+  "resourceTypeIds" : [ "line-item" ],
+  "fieldDefinitions": [
+    {
+        "type": {
+            "name": "Set",
+            "elementType":{
+                "name": "Enum",
+                "values":[{
+                    "key": "cheese",
+                    "label": "Cheese"
+                },
+                {
+                    "key":"pepperoni",
+                    "label":"pepperoni"
+                }
+                ]
+            }
+        },
+        "name": "Ingredients",
+        "label": {
+            "en":"Ingredients"
+        },
+        "required": false
+    }
+  ]
+} 
+
 ## Dependencies
 
 - [Node.js](https://nodejs.org/): Required to run JavaScript on the server.
