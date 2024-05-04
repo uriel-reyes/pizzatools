@@ -1,6 +1,6 @@
 import express = require('express');
 import cors = require('cors');
-import getStoreOrders from './lib/storeGetOrders';
+import getStoreOrders from './lib/getStoreOrders';
 
 const app = express();
 const port = process.env.PORT || 3001;  // Ensure this port does not conflict with your frontend
