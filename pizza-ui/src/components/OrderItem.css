@@ -1,0 +1,9 @@
+.order-container {
+    border: 1px solid #ccc;
+    margin: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background-color: rgba(255, 255, 255, 0.048);
+    border-radius: 8px;
+  }
+  

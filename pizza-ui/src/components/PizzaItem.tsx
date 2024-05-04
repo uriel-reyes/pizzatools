@@ -1,17 +1,20 @@
 import React from 'react';
+import './PizzaItem.css'; // Make sure CSS is correctly imported
+
+interface Pizza {
+  productName: string;
+  ingredients: string[];
+}
 
 interface PizzaItemProps {
-  pizza: {
-    productName: string;
-    ingredients: string[];
-  };
+  pizza: Pizza;
 }
 
 const PizzaItem: React.FC<PizzaItemProps> = ({ pizza }) => {
   return (
-    <div>
+    <div className="pizza-container">
       <h3>{pizza.productName}</h3>
-      <ul>
+      <ul className="ingredients-list">
         {pizza.ingredients.map((ingredient, index) => (
           <li key={index}>{ingredient}</li>
         ))}

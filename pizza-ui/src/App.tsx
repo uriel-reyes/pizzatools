@@ -6,7 +6,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Orders Dashboard</h1>
+        <h1>Pizza Makeline</h1>
         {/* Render the OrdersList component */}
         <OrdersList />
       </header>

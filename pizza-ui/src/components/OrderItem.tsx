@@ -1,5 +1,6 @@
 import React from 'react';
 import PizzaItem from './PizzaItem';
+import './OrderItem.css'; // Ensure this points to the correct file
 
 interface Pizza {
   id: string;
@@ -18,10 +19,10 @@ interface OrderItemProps {
 
 const OrderItem: React.FC<OrderItemProps> = ({ order }) => {
   return (
-    <div>
+    <div className="order-container"> {/* Use the style class here */}
       <h2>Order ID: {order.id}</h2>
       {order.lineItems.map((pizza, index) => (
-        <PizzaItem key={pizza.id} pizza={pizza} />
+        <PizzaItem key={index} pizza={pizza} />
       ))}
     </div>
   );
