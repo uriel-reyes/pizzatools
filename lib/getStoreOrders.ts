@@ -12,6 +12,7 @@ const getStoreOrders = () => {
   .then(response => {
       return response.body.results.map(order => ({
           id: order.id,
+          createdAt: order.createdAt,
           lineItems: order.lineItems.map(lineItem => ({
               productName: lineItem.name.en,
               ingredients: lineItem.custom && lineItem.custom.fields ? lineItem.custom.fields.Ingredients : []
