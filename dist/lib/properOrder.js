@@ -1,9 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.properOrder = void 0;
-var BuildClient_1 = require("../src/BuildClient");
+const BuildClient_1 = __importDefault(require("../src/BuildClient"));
 // Function responsible for creating a cart
-var createCart = function () {
+const createCart = () => {
     return BuildClient_1.default.carts().post({
         body: {
             currency: "USD",
@@ -32,7 +35,7 @@ var createCart = function () {
                         fields: {
                             "Ingredients": [
                                 "cheese",
-                                "pepperoni"
+                                "jalapeno"
                             ]
                         }
                     }
@@ -56,7 +59,7 @@ var createCart = function () {
                         },
                         fields: {
                             "Ingredients": [
-                                "cheese", "mushroom", "bacon", "ham"
+                                "cheese", "mushroom", "pepperoni"
                             ]
                         }
                     }
@@ -74,7 +77,7 @@ var createCart = function () {
         }
     }).execute();
 };
-var createPayment = function (cartAmount) {
+const createPayment = (cartAmount) => {
     return BuildClient_1.default
         .payments()
         .post({ body: {
@@ -86,7 +89,7 @@ var createPayment = function (cartAmount) {
     })
         .execute();
 };
-var addPaymentToCart = function (cartId, paymentId, version) {
+const addPaymentToCart = (cartId, paymentId, version) => {
     return BuildClient_1.default
         .carts()
         .withId({ ID: cartId })
@@ -104,10 +107,10 @@ var addPaymentToCart = function (cartId, paymentId, version) {
     }).execute();
 };
 // Function responsible for creating an order from a cart
-var createOrder = function (cartId, version, cartAmount) {
+const createOrder = (cartId, version, cartAmount) => {
     return BuildClient_1.default.orders().post({
         body: {
-            version: version,
+            version,
             cart: {
                 typeId: "cart",
                 id: cartId
@@ -119,18 +122,18 @@ var createOrder = function (cartId, version, cartAmount) {
         }
     }).execute();
 };
-var properOrder = function () {
+const properOrder = () => {
     return createCart()
-        .then(function (cartResponse) {
-        var _a = cartResponse.body, cartId = _a.id, cartVersion = _a.version, cartAmount = _a.totalPrice;
+        .then(cartResponse => {
+        const { id: cartId, version: cartVersion, totalPrice: cartAmount } = cartResponse.body;
         return createPayment(cartAmount) // Assuming cartAmount is an object with centAmount
-            .then(function (paymentResponse) {
-            var paymentId = paymentResponse.body.id;
+            .then(paymentResponse => {
+            const paymentId = paymentResponse.body.id;
             return addPaymentToCart(cartId, paymentId, cartVersion)
-                .then(function (paymentAddedResponse) {
+                .then(paymentAddedResponse => {
                 // After adding payment, you often need to update the version as the cart has changed
-                var updatedVersion = paymentAddedResponse.body.version;
-                return createOrder(cartId, updatedVersion, cartAmount.centAmount);
+                const updatedVersion = paymentAddedResponse.body.version;
+                return createOrder(cartId, updatedVersion, cartAmount);
             });
         });
     });

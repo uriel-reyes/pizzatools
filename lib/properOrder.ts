@@ -1,3 +1,4 @@
+import { Money } from "@commercetools/platform-sdk";
 import apiRoot from "../src/BuildClient";
 
 // Function responsible for creating a cart
@@ -30,7 +31,7 @@ const createCart = () => {
                         fields:{
                             "Ingredients":[
                                 "cheese",
-                                "pepperoni"
+                                "jalapeno"
                             ]
                         }
                     }
@@ -54,7 +55,7 @@ const createCart = () => {
                         },
                         fields:{
                             "Ingredients":[
-                                "cheese","mushroom","bacon","ham"
+                                "cheese","mushroom","pepperoni"
                             ]
                         }
                     } 
@@ -73,7 +74,7 @@ const createCart = () => {
     }).execute();
 };
 
-const createPayment = (cartAmount) =>{
+const createPayment = (cartAmount:Money) =>{
     return apiRoot
     .payments()
     .post({body:{
@@ -86,7 +87,7 @@ const createPayment = (cartAmount) =>{
     .execute()
 }
 
-const addPaymentToCart = (cartId, paymentId, version) => {
+const addPaymentToCart = (cartId:string, paymentId:string, version:number) => {
     return apiRoot
     .carts()
     .withId({ID:cartId})
@@ -105,7 +106,7 @@ const addPaymentToCart = (cartId, paymentId, version) => {
 };
 
 // Function responsible for creating an order from a cart
-const createOrder = (cartId, version, cartAmount) => {
+const createOrder = (cartId:string, version:number, cartAmount:Money) => {
     return apiRoot.orders().post({
         body: {
             version,
@@ -132,7 +133,7 @@ const properOrder = () => {
                         .then(paymentAddedResponse => {
                             // After adding payment, you often need to update the version as the cart has changed
                             const updatedVersion = paymentAddedResponse.body.version;
-                            return createOrder(cartId, updatedVersion, cartAmount.centAmount);
+                            return createOrder(cartId, updatedVersion, cartAmount);
                         });
                 });
         });

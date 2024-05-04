@@ -1,6 +1,26 @@
 {
-    "compilerOptions": {
-      "outDir": "./dist",
-    }
+  "compilerOptions": {
+    "target": "ES2018",             // Use a target supported by your Node.js version
+    "module": "commonjs",           // Use CommonJS for Node.js compatibility
+    "outDir": "./dist",             // Directory for output files
+    "rootDir": ".",                 // Root directory of the source files
+    "esModuleInterop": true,        // Allows default imports from modules with no default export
+    "allowSyntheticDefaultImports": true, // Allow default imports from modules with no default exports
+    "strict": true,                 // Enable all strict type-checking options
+    "moduleResolution": "node",     // Resolve modules like Node.js
+    "skipLibCheck": true,           // Skip type checking for all declaration files
+    "types": ["node"],              // Specify types for Node.js
+    "resolveJsonModule": true,      // Allow importing JSON files
+    "noImplicitAny": true,          // Raise error on expressions and declarations with an implied 'any' type
+    "noImplicitReturns": true,      // Report error when not all code paths in function return a value
+    "noFallthroughCasesInSwitch": true // Prevent fall through cases in switch statements
+  },
+  "include": [
+    "server.ts",                     // Adjust this if your server entry point is located elsewhere
+    "client.ts",
+    "src/**/*"                        // Include all files in src directory if applicable
+  ],
+  "exclude": [
+    "node_modules"                    // Exclude node_modules from compilation
+  ]
 }
-  
