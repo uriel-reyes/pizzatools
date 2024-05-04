@@ -90,7 +90,13 @@ Update `client.ts` with your function and logic.
 To compile TypeScript to JavaScript, use the following command:
 `tsc`
 
-To run the application:
+To run the backend use:
+`npm run start`
+
+To run the client.ts function use:
+`npm run start-client`
+
+To run the frontend navigate to `pizza-ui` and use:
 `npm start`
 
 ## License
