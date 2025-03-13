@@ -14,6 +14,9 @@ This tool is meant to be a starting point for customers utilizing commercetools 
 
 ## Configuration
 
+You can create a commercetools `extension` to validate payment. For demo purposes we would use the `properOrder` function to create an order with/without payment. 
+The cloud function tied to the `extension` would then update the order's state dependent on whether or not a payment was present. If payment is available the order is confirmed, otherwise the order is cancelled.
+
 Will need a custom type similar to what's modeled below:
 
 {
