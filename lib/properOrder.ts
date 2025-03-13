@@ -13,7 +13,7 @@ const createCart = () => {
             lineItems: [
                 {
                     sku: "pizza",
-                    quantity: 1,
+                    quantity: 2,
                     distributionChannel: {
                         key: "pizza-palace-1",
                         typeId: "channel"
@@ -31,7 +31,8 @@ const createCart = () => {
                         fields:{
                             "Ingredients":[
                                 "cheese",
-                                "jalapeno"
+                                "jalapeno",
+                                "pepperoni"
                             ]
                         }
                     }

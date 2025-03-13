@@ -1,26 +1,57 @@
 .pizza-container {
-    border: 1px solid #ddd;
-    margin: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 10px 0;
     padding: 15px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    background-color: rgba(255, 255, 255, 0.048);
-    border-radius: 5px;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   
-  .pizza-container .ingredients-list {
-    list-style-type: none; /* Remove bullet points */
+  .pizza-info {
+    flex: 1;
+    text-align: left;
+  }
+  
+  .pizza-name {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+  }
+  
+  .ingredients-container {
+    display: flex;
+    align-items: baseline;
+  }
+  
+  .ingredients-label {
+    font-weight: bold;
+    margin-right: 8px;
+    font-size: 0.9rem;
+  }
+  
+  .ingredients-list {
+    list-style-type: none;
     padding: 0;
     margin: 0;
-    overflow: hidden; /* Ensures no wrap and that content does not spill over */
-    white-space: nowrap; /* Keeps the text on a single line */
-}
-
-.pizza-container .ingredients-list li {
-    display: inline; /* Display list items inline */
-    margin-right: 5px; /* Space between ingredients */
-}
-
-.pizza-container .ingredients-list li:not(:last-child)::after {
-    content: ','; /* Add commas after each item except the last one */
-    margin-right: 5px; /* Space after the comma */
-}
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .ingredients-list li {
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 3px 10px;
+    margin: 2px 5px 2px 0;
+    font-size: 0.85rem;
+  }
+  
+  .pizza-visual {
+    margin-left: 15px;
+  }
+  
+  .pizza-icon {
+    font-size: 2rem;
+    text-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+  }
