@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# Pizza Starter
+# pizzatools
 
 This tool is meant to be a starting point for customers utilizing commercetools to power pizza operations and screens. A pizza screen can have multiple uses such as:
 
