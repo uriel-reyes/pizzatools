@@ -99,7 +99,7 @@ To run the backend use:
 To run the client.ts function use:
 `npm run start-client`
 
-To run the frontend navigate to `pizza-ui` and use:
+To run the frontend navigate to `makeline` and use:
 `npm start`
 
 ## License
