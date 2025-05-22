@@ -1,57 +1,125 @@
-.pizza-container {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    margin: 10px 0;
-    padding: 15px;
-    border-radius: 6px;
-    background-color: rgba(255, 255, 255, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .pizza-info {
-    flex: 1;
-    text-align: left;
-  }
-  
-  .pizza-name {
-    margin: 0 0 10px 0;
-    font-size: 1.1rem;
-  }
-  
-  .ingredients-container {
-    display: flex;
-    align-items: baseline;
-  }
-  
-  .ingredients-label {
-    font-weight: bold;
-    margin-right: 8px;
-    font-size: 0.9rem;
-  }
-  
-  .ingredients-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-  .ingredients-list li {
-    display: inline-block;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 3px 10px;
-    margin: 2px 5px 2px 0;
-    font-size: 0.85rem;
-  }
-  
-  .pizza-visual {
-    margin-left: 15px;
-  }
-  
-  .pizza-icon {
-    font-size: 2rem;
-    text-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
-  }
+.pizza-item {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-left: 3px solid #0078ae; /* Domino's blue */
+}
+
+.pizza-item:hover {
+  background-color: #f5f5f5;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.pizza-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pizza-name {
+  color: #333;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.pizza-quantity {
+  background-color: #e31837; /* Domino's red */
+  color: white;
+  font-weight: bold;
+  padding: 2px 10px;
+  border-radius: 20px; /* Pill shape */
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(227, 24, 55, 0.2);
+}
+
+.pizza-ingredients {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.ingredients-label {
+  font-weight: 600;
+  color: #0078ae; /* Domino's blue */
+  margin-right: 4px;
+}
+
+.no-ingredients {
+  font-style: italic;
+  color: #888;
+}
+
+/* Pizza visual indicator with Domino's logo styling */
+.pizza-item::before {
+  content: "🍕";
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  font-size: 1.2rem;
+  opacity: 0.3;
+}
+
+/* Special styling for different pizza types */
+.pizza-item[data-type="pepperoni"] {
+  border-left-color: #e31837; /* Domino's red */
+}
+
+.pizza-item[data-type="cheese"] {
+  border-left-color: #ffcc00; /* Yellow */
+}
+
+.pizza-item[data-type="supreme"] {
+  border-left-color: #800080; /* Purple */
+}
+
+.pizza-item[data-type="meat-lovers"] {
+  border-left-color: #8b0000; /* Dark red */
+}
+
+.pizza-item[data-type="veggie"] {
+  border-left-color: #00b140; /* Green */
+}
+
+.pizza-item[data-type="hawaiian"] {
+  border-left-color: #ff6b2b; /* Orange */
+}
+
+/* Extra domino detail */
+.active .pizza-item::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 10px;
+  height: 10px;
+  background-color: #0078ae; /* Domino's blue */
+  border-radius: 50%;
+}
+
+/* Style for individual toppings */
+.topping {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 2px 6px;
+  background-color: rgba(0, 120, 174, 0.1); /* Light blue background */
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Different topping colors */
+.topping-cheese { background-color: rgba(255, 204, 0, 0.2); }
+.topping-pepperoni { background-color: rgba(227, 24, 55, 0.1); }
+.topping-mushroom { background-color: rgba(128, 128, 128, 0.1); }
+.topping-onion { background-color: rgba(146, 0, 146, 0.1); }
+.topping-ham { background-color: rgba(255, 182, 193, 0.2); }
+.topping-pineapple { background-color: rgba(255, 207, 0, 0.2); }
+.topping-bacon { background-color: rgba(165, 42, 42, 0.1); }
+.topping-jalapeno { background-color: rgba(0, 177, 64, 0.1); }

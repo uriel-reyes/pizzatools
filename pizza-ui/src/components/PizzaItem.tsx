@@ -4,6 +4,7 @@ import './PizzaItem.css';
 interface Pizza {
   productName: string;
   ingredients: string[];
+  quantity?: number;
 }
 
 interface PizzaItemProps {
@@ -22,27 +23,49 @@ const PizzaItem: React.FC<PizzaItemProps> = ({ pizza }) => {
   
   const hasIngredients = Array.isArray(pizza.ingredients) && pizza.ingredients.length > 0;
 
+  // Determine pizza type based on ingredients
+  const getPizzaType = (ingredients: string[]): string => {
+    const ingredientsStr = ingredients.join(',');
+    
+    if (ingredientsStr.includes('pepperoni') && ingredients.length <= 2) return 'pepperoni';
+    if (ingredientsStr.includes('cheese') && ingredients.length === 1) return 'cheese';
+    if (ingredientsStr.includes('pineapple') && ingredientsStr.includes('ham')) return 'hawaiian';
+    if (ingredientsStr.includes('mushroom') && !ingredientsStr.includes('pepperoni') && 
+        !ingredientsStr.includes('ham') && !ingredientsStr.includes('bacon')) return 'veggie';
+    if (ingredientsStr.includes('pepperoni') && ingredientsStr.includes('ham') && 
+        ingredientsStr.includes('bacon')) return 'meat-lovers';
+    if (ingredients.length >= 4) return 'supreme';
+    
+    return '';
+  };
+
+  // Format ingredients for display with styling
+  const formatIngredients = (ingredients: string[]) => {
+    return ingredients.map((ing, index) => (
+      <span key={index} className={`topping topping-${ing}`}>
+        {ing.charAt(0).toUpperCase() + ing.slice(1)}
+      </span>
+    ));
+  };
+
+  const pizzaType = getPizzaType(pizza.ingredients || []);
+
   return (
-    <div className="pizza-container">
-      <div className="pizza-info">
+    <div className="pizza-item" data-type={pizzaType}>
+      <div className="pizza-item-header">
         <h4 className="pizza-name">{pizza.productName}</h4>
-        <div className="ingredients-container">
-          <span className="ingredients-label">Ingredients:</span>
-          {hasIngredients ? (
-            <ul className="ingredients-list">
-              {pizza.ingredients.map((ingredient, index) => (
-                <li key={index}>{ingredient}</li>
-              ))}
-            </ul>
-          ) : (
-            <span className="ingredients-empty">None specified</span>
-          )}
-        </div>
+        {pizza.quantity && pizza.quantity > 1 && (
+          <span className="pizza-quantity">x{pizza.quantity}</span>
+        )}
       </div>
-      <div className="pizza-visual">
-        <div className="pizza-icon">
-          🍕
-        </div>
+      <div className="pizza-ingredients">
+        {pizza.ingredients && pizza.ingredients.length > 0 ? (
+          <>
+            <span className="ingredients-label">Toppings:</span> {formatIngredients(pizza.ingredients)}
+          </>
+        ) : (
+          <span className="no-ingredients">Plain cheese</span>
+        )}
       </div>
     </div>
   );

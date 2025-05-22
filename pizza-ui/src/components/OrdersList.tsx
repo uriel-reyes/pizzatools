@@ -1,26 +1,34 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import OrderItem from './OrderItem';
+import './OrderList.css';
+import Order from '../types/Order';
 
-interface Pizza {
-  productName: string;
-  ingredients: string[];
+interface OrdersListProps {
+  onOrderCompleted: () => void;
 }
 
-interface Order {
-  id: string;
-  createdAt: string;
-  lineItems: Pizza[];
-  state?: {
-    typeId: string;
-    id: string;
-  };
-}
-
-const OrdersList: React.FC = () => {
+const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeOrderIndex, setActiveOrderIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Create refs for each order item
+  const orderRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Reset refs when orders change
+  useEffect(() => {
+    orderRefs.current = orderRefs.current.slice(0, orders.length);
+  }, [orders]);
+
+  // Scroll active order into view when it changes
+  useEffect(() => {
+    if (activeOrderIndex >= 0 && orderRefs.current[activeOrderIndex]) {
+      orderRefs.current[activeOrderIndex]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, [activeOrderIndex]);
 
   // Fetch orders from the backend
   const fetchOrders = useCallback(async () => {
@@ -110,6 +118,9 @@ const OrdersList: React.FC = () => {
       // Show a temporary success message
       console.log(`Order ${orderId} moved to ${newStatus}`);
       
+      // Call the callback to update the completion time
+      onOrderCompleted();
+      
     } catch (error) {
       console.error(`Error updating order ${orderId} to ${newStatus}:`, error);
       setError(`Failed to update order. See console for details.`);
@@ -178,11 +189,17 @@ const OrdersList: React.FC = () => {
   return (
     <div className="orders-list">
       {orders.map((order, index) => (
-        <OrderItem 
-          key={order.id} 
-          order={order} 
-          isActive={index === activeOrderIndex} 
-        />
+        <div 
+          ref={el => orderRefs.current[index] = el} 
+          key={order.id}
+          className="order-wrapper"
+        >
+          <OrderItem 
+            order={order} 
+            isActive={index === activeOrderIndex} 
+            onComplete={() => updateOrderStatus(order.id, 'in-oven')}
+          />
+        </div>
       ))}
       <div className="order-status">
         {loading ? 'Updating order...' : `${orders.length} order(s) ready for preparation`}

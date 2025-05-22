@@ -1,28 +1,15 @@
 import React from 'react';
 import PizzaItem from './PizzaItem';
 import './OrderItem.css';
-
-interface Pizza {
-  productName: string;
-  ingredients: string[];
-}
-
-interface Order {
-  id: string;
-  createdAt: string;
-  lineItems: Pizza[];
-  state?: {
-    typeId: string;
-    id: string;
-  };
-}
+import Order from '../types/Order';
 
 interface OrderItemProps {
   order: Order;
   isActive: boolean;
+  onComplete: () => void;
 }
 
-const OrderItem: React.FC<OrderItemProps> = ({ order, isActive }) => {
+const OrderItem: React.FC<OrderItemProps> = ({ order, isActive, onComplete }) => {
   // Debug output to console
   console.log('Rendering OrderItem:', order);
   
@@ -34,7 +21,7 @@ const OrderItem: React.FC<OrderItemProps> = ({ order, isActive }) => {
     return (
       <div className={`order-container ${activeClass} order-empty`}>
         <div className="order-header">
-          <h2>Order: {order.id}</h2>
+          <h2>{order.orderNumber ? `#${order.orderNumber}` : `Order: ${order.id.substring(0, 6)}`}</h2>
           <div className="order-meta">
             <span className="order-time">Received: {new Date(order.createdAt).toLocaleTimeString()}</span>
             <span className="order-state">No items found</span>
@@ -56,24 +43,34 @@ const OrderItem: React.FC<OrderItemProps> = ({ order, isActive }) => {
     }
   };
 
+  // Calculate total number of pizzas (considering quantities)
+  const totalPizzaCount = order.lineItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+  // Get a user-friendly display ID - either orderNumber or a shorter version of the ID
+  const displayId = order.orderNumber || order.id.substring(0, 6);
+
   return (
     <div className={`order-container ${activeClass}`}>
       <div className="order-header">
-        <h2>Order: {order.id.substring(0, 8)}...</h2>
+        <h2>#{displayId}</h2>
         <div className="order-meta">
           <span className="order-time">Received: {formatDate(order.createdAt)}</span>
-          <span className="order-state">Status: {order.state ? order.state.id : 'Unknown'}</span>
+          <span className="order-state">
+            Status: <span className="state-name">{order.stateInfo?.name || 'Preparing'}</span>
+          </span>
         </div>
       </div>
       <div className="order-items">
-        <h3>Pizzas ({order.lineItems.length})</h3>
+        <h3>Pizzas ({totalPizzaCount})</h3>
         {order.lineItems.map((pizza, index) => (
           <PizzaItem key={index} pizza={pizza} />
         ))}
       </div>
       {isActive && (
         <div className="order-controls">
-          <p>Press ENTER to move to "In Oven"</p>
+          <div className="action-instruction" onClick={onComplete}>
+            Press <span className="key-hint">ENTER</span> to move to "In Oven"
+          </div>
         </div>
       )}
     </div>
