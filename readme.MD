@@ -27,6 +27,7 @@ A React application that shows pending orders to be prepared in the kitchen.
 - Allows staff to mark orders as completed
 - Tracks time since last order completion
 - Features keyboard shortcuts for efficient operation
+- **Query Details**: Fetches orders with state "Open" and stateId "1c25473a-05e1-46f4-82a7-acc66d0a5154" from store "9267"
 
 ### 3. Dispatch - Delivery Management System
 
@@ -35,7 +36,7 @@ A React application that shows pending deliveries on a map.
 - Shows customer details and addresses
 - Allows navigation to delivery addresses via Google Maps integration
 - Provides keyboard shortcuts for efficient order management
-- Filters for orders with state "Open" and state ID "118b88e6-013e-45db-8608-d8b2358ecbb4"
+- **Query Details**: Fetches orders with state "Open", stateId "118b88e6-013e-45db-8608-d8b2358ecbb4" and "393518bd-5207-4aba-b910-81cb2e7343f4", method "delivery", and from store "9267"
 
 ## Configuration
 
@@ -151,11 +152,34 @@ The system uses the following order states:
 
 | Endpoint | Method | Description | Parameters |
 |----------|--------|-------------|------------|
-| `/orders` | GET | Fetches orders for makeline | None |
-| `/api/orders` | GET | Fetches orders for dispatch | `state` (required), `stateId` (optional) |
+| `/orders` | GET | Fetches orders for makeline | None (hardcoded query for Open orders with stateId "1c25473a-05e1-46f4-82a7-acc66d0a5154" from store "9267") |
+| `/api/orders` | GET | Fetches orders for dispatch | `state` (required), `stateId` (required), `method` (optional), `storeKey` (hardcoded as "9267") |
 | `/orders/:id/state` | POST | Updates order state | `state` (required in body) |
 | `/debug/order-states` | GET | Lists all available order states | None |
 | `/debug/orders/:id` | GET | Shows detailed information about an order | None |
+
+## Query Structure Details
+
+### Makeline App Query
+```
+GET /orders
+```
+- Fixed parameters (handled by server):
+  - `state`: "Open"
+  - `stateId`: "1c25473a-05e1-46f4-82a7-acc66d0a5154" (preparation pending)
+  - `storeKey`: "9267"
+- Returns orders ready for preparation in the kitchen
+
+### Dispatch App Query
+```
+GET /api/orders?state=Open&stateId=118b88e6-013e-45db-8608-d8b2358ecbb4,393518bd-5207-4aba-b910-81cb2e7343f4&method=delivery
+```
+- Parameters:
+  - `state`: "Open" 
+  - `stateId`: Multiple IDs for orders ready for delivery
+  - `method`: "delivery"
+  - `storeKey`: "9267" (handled by server)
+- Returns delivery orders for display on the map
 
 ## Technologies Used
 

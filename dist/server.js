@@ -5,64 +5,169 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
 const cors = require("cors");
-const getStoreOrders_1 = __importDefault(require("./lib/getStoreOrders"));
 const BuildClient_1 = __importDefault(require("./src/BuildClient"));
-const app = express();
+// Constant values
+const STORE_KEY = "9267"; // Consistent store key for all endpoints
 const port = process.env.PORT || 3001;
+// Helper functions for reusable logic
+async function getStateMap() {
+    // Create a map of state ID to state name
+    const statesResponse = await BuildClient_1.default
+        .states()
+        .get()
+        .execute();
+    const stateMap = new Map();
+    statesResponse.body.results.forEach(state => {
+        var _a;
+        stateMap.set(state.id, {
+            name: ((_a = state.name) === null || _a === void 0 ? void 0 : _a.en) || state.key,
+            key: state.key
+        });
+    });
+    return stateMap;
+}
+// Common error handler
+function handleError(res, error, message = 'Server error') {
+    console.error(message, error);
+    let errorMessage = message;
+    let errorDetails = {};
+    if (error instanceof Error) {
+        errorMessage = error.message;
+        // Try to extract more details from commercetools error
+        const ctError = error;
+        if (ctError.body) {
+            errorDetails = ctError.body;
+        }
+    }
+    return res.status(500).json({
+        error: message,
+        message: errorMessage,
+        details: errorDetails
+    });
+}
+// Initialize Express app
+const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-// Endpoint to get orders
-app.get('/orders', (req, res) => {
-    (0, getStoreOrders_1.default)().then(orders => {
-        res.json(orders);
-    }).catch(error => {
-        console.error('Failed to retrieve orders:', error);
-        res.status(500).send('Failed to retrieve orders');
-    });
+// Endpoint for Makeline app (Kitchen Display System)
+app.get('/orders', async (req, res) => {
+    console.log(`Makeline orders endpoint called - fetching orders for store ${STORE_KEY}`);
+    try {
+        // Parameters for Makeline orders
+        const state = "Open";
+        const stateId = "1c25473a-05e1-46f4-82a7-acc66d0a5154"; // ID for 'preparation pending' state
+        // Get state info map
+        const stateMap = await getStateMap();
+        // Build the query clause
+        const whereClause = `orderState = "${state}" AND state(id="${stateId}")`;
+        console.log(`Makeline: Fetching orders with query: ${whereClause} for store: ${STORE_KEY}`);
+        // Execute the query
+        const response = await BuildClient_1.default
+            .inStoreKeyWithStoreKeyValue({ storeKey: STORE_KEY })
+            .orders()
+            .get({
+            queryArgs: {
+                where: whereClause,
+                sort: ["createdAt desc"]
+            }
+        })
+            .execute();
+        // Map orders to the format expected by Makeline app
+        const mappedOrders = response.body.results.map(order => {
+            const stateInfo = order.state ? stateMap.get(order.state.id) : null;
+            return {
+                id: order.id,
+                createdAt: order.createdAt,
+                state: order.state,
+                stateInfo: stateInfo || { name: "Unknown", key: "unknown" },
+                orderNumber: order.orderNumber,
+                totalItems: order.lineItems.length,
+                lineItems: order.lineItems.map(lineItem => ({
+                    productName: lineItem.name.en,
+                    quantity: lineItem.quantity,
+                    ingredients: lineItem.custom && lineItem.custom.fields ? lineItem.custom.fields.Ingredients : []
+                }))
+            };
+        });
+        return res.json(mappedOrders);
+    }
+    catch (error) {
+        return handleError(res, error, 'Failed to retrieve makeline orders');
+    }
 });
-// New endpoint to get orders with specific state
+// Endpoint for Dispatch app (Delivery Management)
 app.get('/api/orders', async (req, res) => {
-    const { state, stateId } = req.query;
+    const { state, stateId, method } = req.query;
+    // Log the request parameters
+    console.log('Dispatch orders endpoint called:', {
+        state,
+        stateId,
+        method,
+        storeKey: STORE_KEY
+    });
+    // Validate required parameters
     if (!state || typeof state !== 'string') {
         return res.status(400).json({ error: 'State parameter is required' });
     }
     try {
-        // First fetch state names
-        const statesResponse = await BuildClient_1.default
-            .states()
-            .get()
-            .execute();
-        // Create a map of state ID to state name
-        const stateMap = new Map();
-        statesResponse.body.results.forEach(state => {
-            var _a;
-            stateMap.set(state.id, {
-                name: ((_a = state.name) === null || _a === void 0 ? void 0 : _a.en) || state.key,
-                key: state.key
-            });
-        });
-        // Build the where clause based on provided parameters
+        // Get state info map
+        const stateMap = await getStateMap();
+        // Build the query clause
         let whereClause = `orderState = "${state}"`;
-        if (stateId && typeof stateId === 'string') {
-            whereClause += ` AND state(id="${stateId}")`;
+        // Handle stateId parameter which can be a single value or comma-separated list
+        if (stateId) {
+            if (typeof stateId === 'string') {
+                // Check if stateId contains commas (multiple IDs)
+                if (stateId.includes(',')) {
+                    const stateIds = stateId.split(',').map(id => id.trim());
+                    const stateIdConditions = stateIds.map(id => `state(id="${id}")`).join(' OR ');
+                    whereClause += ` AND (${stateIdConditions})`;
+                }
+                else {
+                    // Single stateId
+                    whereClause += ` AND state(id="${stateId}")`;
+                }
+            }
         }
+        console.log(`Dispatch: Fetching orders with query: ${whereClause} for store: ${STORE_KEY}`);
+        // Execute the query
         const response = await BuildClient_1.default
-            .inStoreKeyWithStoreKeyValue({ storeKey: "pizza-palace-1" })
+            .inStoreKeyWithStoreKeyValue({ storeKey: STORE_KEY })
             .orders()
             .get({
             queryArgs: {
-                where: whereClause
+                where: whereClause,
+                sort: ["createdAt desc"]
             }
         })
             .execute();
-        const orders = response.body.results.map(order => {
+        // Get all orders and then filter by method if required
+        let orders = response.body.results;
+        // Filter by delivery method if specified
+        if (method && typeof method === 'string') {
+            orders = orders.filter(order => {
+                // Check if order has custom fields
+                if (order.custom) {
+                    // Check for Method in customFieldsRaw
+                    const customData = order.custom;
+                    if (Array.isArray(customData.customFieldsRaw)) {
+                        const methodField = customData.customFieldsRaw.find((field) => field.name === 'Method');
+                        return methodField && methodField.value === method;
+                    }
+                    // Try to access Method directly as a fallback
+                    if (customData.fields && customData.fields.Method) {
+                        return customData.fields.Method === method;
+                    }
+                }
+                return false; // No method field found
+            });
+        }
+        // Map orders to the format expected by the Dispatch app
+        const mappedOrders = orders.map(order => {
             var _a;
-            // Get state name from map if available
             const stateInfo = order.state ? stateMap.get(order.state.id) : null;
-            // Extract customer information
             const customerName = order.customerEmail ? order.customerEmail.split('@')[0] : 'Customer';
-            // Get the shipping address
             const shippingAddress = order.shippingAddress || {};
             return {
                 id: order.id,
@@ -101,14 +206,13 @@ app.get('/api/orders', async (req, res) => {
                 stateInfo: stateInfo || { name: "Unknown", key: "unknown" }
             };
         });
-        return res.json(orders);
+        return res.json(mappedOrders);
     }
     catch (error) {
-        console.error('Failed to retrieve orders:', error);
-        return res.status(500).send('Failed to retrieve orders');
+        return handleError(res, error, 'Failed to retrieve dispatch orders');
     }
 });
-// New endpoint to update order state with correct action
+// Endpoint to update order state
 app.post('/orders/:id/state', async (req, res) => {
     const orderId = req.params.id;
     const { state } = req.body;
@@ -116,7 +220,7 @@ app.post('/orders/:id/state', async (req, res) => {
         return res.status(400).json({ error: 'Order ID and state are required' });
     }
     try {
-        // First, get all available states to find the right state ID
+        // Get all available states
         const statesResponse = await BuildClient_1.default
             .states()
             .get()
@@ -141,7 +245,7 @@ app.post('/orders/:id/state', async (req, res) => {
             .execute();
         const orderVersion = orderResponse.body.version;
         console.log(`Transitioning order ${orderId} to state "${state}" (ID: ${stateObj.id}, version: ${orderVersion})`);
-        // Update the order with the correct transitionState action
+        // Update the order state
         const updateResponse = await BuildClient_1.default
             .orders()
             .withId({ ID: orderId })
@@ -165,25 +269,10 @@ app.post('/orders/:id/state', async (req, res) => {
         });
     }
     catch (error) {
-        console.error(`Failed to update order ${orderId} state:`, error);
-        let errorMessage = 'Failed to update order state';
-        let errorDetails = {};
-        if (error instanceof Error) {
-            errorMessage = error.message;
-            // Try to extract more details from commercetools error
-            const ctError = error;
-            if (ctError.body) {
-                errorDetails = ctError.body;
-            }
-        }
-        return res.status(500).json({
-            error: 'Failed to update order state',
-            message: errorMessage,
-            details: errorDetails
-        });
+        return handleError(res, error, `Failed to update order ${orderId} state`);
     }
 });
-// Debug endpoint to test state transitions
+// Debug endpoint to view available order states
 app.get('/debug/order-states', async (req, res) => {
     try {
         // Fetch available states
@@ -214,14 +303,7 @@ app.get('/debug/order-states', async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Error fetching states:', error);
-        let errorMessage = 'Failed to fetch order states';
-        if (error instanceof Error) {
-            errorMessage = error.message;
-        }
-        return res.status(500).json({
-            error: errorMessage
-        });
+        return handleError(res, error, 'Failed to fetch order states');
     }
 });
 // Debug endpoint to inspect a specific order
@@ -239,7 +321,7 @@ app.get('/debug/orders/:id', async (req, res) => {
                 version: orderResponse.body.version,
                 state: orderResponse.body.state,
                 orderState: orderResponse.body.orderState,
-                // Include other relevant fields
+                custom: orderResponse.body.custom
             },
             update_example: {
                 endpoint: `/orders/${orderId}/state`,
@@ -251,16 +333,11 @@ app.get('/debug/orders/:id', async (req, res) => {
         });
     }
     catch (error) {
-        console.error(`Error fetching order ${orderId}:`, error);
-        let errorMessage = 'Failed to fetch order';
-        if (error instanceof Error) {
-            errorMessage = error.message;
-        }
-        return res.status(500).json({
-            error: errorMessage
-        });
+        return handleError(res, error, `Failed to fetch order ${orderId}`);
     }
 });
+// Start the server
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
+    console.log(`Using store key: ${STORE_KEY} for all endpoints`);
 });

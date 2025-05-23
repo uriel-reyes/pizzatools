@@ -1,7 +1,53 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Libraries } from '@react-google-maps/api';
 import './DeliveryMap.css';
 import { Order } from '../types/Order';
+
+// CommerceTools order type definition
+interface CTOrder {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  lastModifiedAt: string;
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    streetName: string;
+    city: string;
+    postalCode: string;
+  };
+  lineItems: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+  }>;
+  totalPrice: {
+    centAmount: number;
+    currencyCode: string;
+  };
+  custom: {
+    customFieldsRaw: Array<{
+      name: string;
+      value: string;
+    }>;
+  };
+  state: {
+    key: string;
+    id: string;
+  };
+  store: {
+    key: string;
+  };
+}
+
+// Define libraries array outside the component to prevent recreation on each render
+const mapLibraries: Libraries = ['places', 'geocoding'];
+
+// Use the API key directly instead of environment variable 
+// This is temporary until environment variable issues are resolved
+const GOOGLE_MAPS_API_KEY = 'AIzaSyBDfqFes5QLvs6FLtiMsmYcHH32pAUltzM';
+console.log("Using Google Maps API Key:", GOOGLE_MAPS_API_KEY ? 
+  `${GOOGLE_MAPS_API_KEY.substring(0, 5)}...${GOOGLE_MAPS_API_KEY.substring(GOOGLE_MAPS_API_KEY.length - 4)}` : "MISSING");
 
 // Map container style
 const containerStyle = {
@@ -39,32 +85,40 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
   const [error, setError] = useState<string | null>(null);
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
 
-  // Load the Google Maps JavaScript API
+  // Load the Google Maps JavaScript API with direct API key
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "", // Set your API key in .env
-    libraries: ['places', 'geocoding'] // Add geocoding library
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: mapLibraries
   });
 
   // Initialize geocoder when maps load
   useEffect(() => {
     if (isLoaded && !geocoder) {
+      console.log("Google Maps loaded successfully, initializing geocoder");
       setGeocoder(new google.maps.Geocoder());
     }
   }, [isLoaded, geocoder]);
 
-  // Geocode an address to coordinates
+  // Modified geocode function to attempt actual geocoding
   const geocodeAddress = async (address: string): Promise<Location | null> => {
-    if (!geocoder) return null;
+    if (!geocoder) {
+      console.warn("Geocoder not initialized yet");
+      return null;
+    }
     
     try {
+      console.log(`Attempting to geocode address: ${address}`);
       const result = await geocoder.geocode({ address });
       
       if (result.results && result.results.length > 0) {
         const location = result.results[0].geometry.location;
+        console.log(`Successfully geocoded ${address}`);
         return {
           lat: location.lat(),
           lng: location.lng()
         };
+      } else {
+        console.warn(`No results found for address: ${address}`);
       }
       
       return null;
@@ -77,7 +131,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
   // Fetch orders with delivery status
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/orders?state=Open&stateId=118b88e6-013e-45db-8608-d8b2358ecbb4');
+      const response = await fetch('http://localhost:3001/api/orders?state=Open&stateId=118b88e6-013e-45db-8608-d8b2358ecbb4,393518bd-5207-4aba-b910-81cb2e7343f4&method=delivery&storeKey=9267');
       
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -96,10 +150,11 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
             let location: Location | null = null;
             
             // Try to geocode the address if we have meaningful address data
-            if (shippingAddress.streetName && shippingAddress.city) {
-              // Only attempt geocoding if we have the basic address components
-              if (geocoder) {
+            if (shippingAddress.streetName && shippingAddress.city && geocoder) {
+              try {
                 location = await geocodeAddress(addressString);
+              } catch (geocodeError) {
+                console.error(`Geocoding error for ${addressString}:`, geocodeError);
               }
             }
             

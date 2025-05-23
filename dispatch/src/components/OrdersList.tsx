@@ -15,8 +15,8 @@ const OrdersList: React.FC<OrdersListProps> = ({ onSelectOrder, selectedOrderId 
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
-      // API endpoint for orders with the "Open" state and specific state ID
-      const response = await fetch('http://localhost:3001/api/orders?state=Open&stateId=118b88e6-013e-45db-8608-d8b2358ecbb4');
+      // API endpoint for orders with the "Open" state and specific state IDs
+      const response = await fetch('http://localhost:3001/api/orders?state=Open&stateId=118b88e6-013e-45db-8608-d8b2358ecbb4,393518bd-5207-4aba-b910-81cb2e7343f4&method=delivery&storeKey=9267');
       
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);

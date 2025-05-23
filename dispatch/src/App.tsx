@@ -3,13 +3,16 @@ import './App.css';
 import DeliveryMap from './components/DeliveryMap';
 import OrdersList from './components/OrdersList';
 
+// Store information - hardcoded for now but could come from config or API in the future
+const STORE_NUMBER = '9267';
+
 function App() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Pizza Dispatch</h1>
+        <h1>Pizza Dispatch - Store #{STORE_NUMBER}</h1>
         <p className="App-subtitle">Delivery Management System</p>
       </header>
       <main className="App-main">
