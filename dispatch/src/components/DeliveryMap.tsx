@@ -43,9 +43,8 @@ interface CTOrder {
 // Define libraries array outside the component to prevent recreation on each render
 const mapLibraries: Libraries = ['places', 'geocoding'];
 
-// Use the API key directly instead of environment variable 
-// This is temporary until environment variable issues are resolved
-const GOOGLE_MAPS_API_KEY = 'AIzaSyBDfqFes5QLvs6FLtiMsmYcHH32pAUltzM';
+// Use environment variable for the API key instead of hardcoding it
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
 console.log("Using Google Maps API Key:", GOOGLE_MAPS_API_KEY ? 
   `${GOOGLE_MAPS_API_KEY.substring(0, 5)}...${GOOGLE_MAPS_API_KEY.substring(GOOGLE_MAPS_API_KEY.length - 4)}` : "MISSING");
 

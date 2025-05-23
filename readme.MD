@@ -127,15 +127,27 @@ The backend API requires configuration for commercetools:
 
 ## Google Maps Integration
 
-The Dispatch app uses Google Maps for displaying delivery locations:
-- API key is directly hardcoded in the `DeliveryMap.tsx` component for simplicity:
-  ```javascript
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyBDfqFes5QLvs6FLtiMsmYcHH32pAUltzM';
-  ```
+The Dispatch app uses Google Maps API for displaying delivery locations on an interactive map:
+
+### API Key Configuration
+For security, the Google Maps API key is stored in an environment variable:
+
+1. Create a `.env` file in the `dispatch` directory with:
+   ```
+   REACT_APP_GOOGLE_MAPS_API_KEY=your_api_key_here
+   ```
+2. The `.env` file is already added to `.gitignore` to prevent exposing your API key in version control
+3. The application reads this environment variable with:
+   ```javascript
+   const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
+   ```
+
+### Map Features
 - Uses Google Maps JavaScript API with 'places' and 'geocoding' libraries
 - Centers on Domino's in Pflugerville, TX by default (30.466031, -97.584150)
 - Provides geocoding of customer addresses with fallback to random locations if geocoding fails
-- For production, it's recommended to move this to an environment variable
+- Displays custom markers for store location and delivery addresses
+- Includes navigation capabilities via Google Maps directions
 
 ## Order States
 
