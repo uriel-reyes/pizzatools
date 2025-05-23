@@ -1,7 +1,28 @@
 import { Money } from "@commercetools/platform-sdk";
 import apiRoot from "../src/BuildClient";
 
-// Sample data for Pflugerville, TX (78660)
+// Pflugerville neighborhoods and areas
+const neighborhoods = [
+  "Avalon", "Blackhawk", "Bohls Place", "Cambridge Estates", 
+  "Cantarra", "Commons at Rowe Lane", "Estates at Lake Creek", 
+  "Falcon Pointe", "Fairways at Blackhawk", "Gatlinburg", 
+  "Heatherwilde", "Highland Park", "Meadows at Blackhawk", 
+  "Mountain Creek", "Pflugerville Heights", "Reserve at Westcreek",
+  "Royal Pointe", "Settlers Ridge", "Sorento", "Villages of Hidden Lake"
+];
+
+// Updated with actual street names in Pflugerville for better geocoding
+const streetNames = [
+  "Limestone Commercial Dr", "Pflugerville Pkwy", "Pecan St", 
+  "Dessau Rd", "Grand Avenue Pkwy", "Heatherwilde Blvd",
+  "Kelly Ln", "Rowe Ln", "Weiss Ln", "Wells Branch Pkwy",
+  "Immanuel Rd", "Hidden Lake Dr", "Windermere Dr", "Picadilly Dr", 
+  "Copperfield Dr", "Black Locust Dr", "Settlers Valley Dr",
+  "Wilke Ridge Ln", "Ridge Line Dr", "Collingwood Dr",
+  "Olympic Dr", "Yellow Sage Dr", "Tumbleweed Dr", "Kickapoo Cavern Dr"
+];
+
+// Sample data for Pflugerville, TX (78660, 78664, 78691)
 const firstNames = [
   "Michael", "Jennifer", "David", "Jessica", "Christopher", 
   "Ashley", "Matthew", "Amanda", "Joshua", "Sarah",
@@ -20,26 +41,26 @@ const lastNames = [
   "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson"
 ];
 
-const streetNames = [
-  "1234 Pecan St", "2345 Windermere Dr", "3456 Hidden Lake Dr", 
-  "4567 Dessau Rd", "5678 Grand Avenue Pkwy", "6789 Heatherwilde Blvd",
-  "7890 Kelly Ln", "8901 Rowe Ln", "9012 Weiss Ln", "1023 Pflugerville Pkwy",
-  "1122 Picadilly Dr", "2233 Meadow View Ln", "3344 Falcon Dr",
-  "4455 Spring Hill Ln", "5566 Black Locust Dr", "6677 Settlers Valley Dr",
-  "7788 Tumbleweed Dr", "8899 Scofield Ridge Pkwy", "9900 Swenson Farms Blvd",
-  "1010 Yellow Sage Dr", "2020 Whispering Valley Dr", "3030 Glenhill Ln"
-];
+// Generate Pflugerville area street numbers
+const streetNumbers = ["123", "456", "789", "1024", "555", "842", "2020", "1550", 
+                      "3651", "4872", "18701", "10001", "12345", "2468", "3579"];
+
+// Pflugerville zip codes
+const zipCodes = ["78660", "78664", "78691"];
 
 // Generate a random customer
 const generateRandomCustomer = () => {
   const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
   const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-  const street = streetNames[Math.floor(Math.random() * streetNames.length)];
+  const streetName = streetNames[Math.floor(Math.random() * streetNames.length)];
+  const streetNumber = streetNumbers[Math.floor(Math.random() * streetNumbers.length)];
+  const zipCode = zipCodes[Math.floor(Math.random() * zipCodes.length)];
+  const neighborhood = neighborhoods[Math.floor(Math.random() * neighborhoods.length)];
   
   // Generate a random apartment number for some addresses
   const hasApartment = Math.random() > 0.7;
   const apartmentNumber = hasApartment ? `, Apt ${Math.floor(Math.random() * 999) + 100}` : '';
-  const fullStreet = street + apartmentNumber;
+  const fullStreet = `${streetNumber} ${streetName}${apartmentNumber}`;
   
   // Generate a random phone number with Austin area code
   const phoneDigits = Math.floor(Math.random() * 10000000) + 1000000;
@@ -49,9 +70,9 @@ const generateRandomCustomer = () => {
     firstName,
     lastName,
     street: fullStreet,
-    city: "Pflugerville",
+    city: `Pflugerville - ${neighborhood}`,
     state: "Texas",
-    zipCode: "78660",
+    zipCode,
     phone
   };
 };

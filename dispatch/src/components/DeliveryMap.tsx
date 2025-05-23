@@ -9,11 +9,14 @@ const containerStyle = {
   height: '100%'
 };
 
-// Default center (can be changed to your pizza store location)
+// Center on Domino's in Pflugerville, TX
 const defaultCenter = {
-  lat: 37.7749, // San Francisco latitude
-  lng: -122.4194 // San Francisco longitude
+  lat: 30.466031, // Domino's Pflugerville latitude
+  lng: -97.584150 // Domino's Pflugerville longitude
 };
+
+// Real Domino's address to display in the map UI
+const dominosAddress = "18701 Limestone Commercial Dr Suite 400, Pflugerville, TX 78660";
 
 interface DeliveryMapProps {
   selectedOrderId: string | null;
@@ -34,13 +37,42 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [error, setError] = useState<string | null>(null);
+  const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
 
   // Load the Google Maps JavaScript API
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "", // Set your API key in .env
-    // Additional libraries if needed
-    // libraries: ['places']
+    libraries: ['places', 'geocoding'] // Add geocoding library
   });
+
+  // Initialize geocoder when maps load
+  useEffect(() => {
+    if (isLoaded && !geocoder) {
+      setGeocoder(new google.maps.Geocoder());
+    }
+  }, [isLoaded, geocoder]);
+
+  // Geocode an address to coordinates
+  const geocodeAddress = async (address: string): Promise<Location | null> => {
+    if (!geocoder) return null;
+    
+    try {
+      const result = await geocoder.geocode({ address });
+      
+      if (result.results && result.results.length > 0) {
+        const location = result.results[0].geometry.location;
+        return {
+          lat: location.lat(),
+          lng: location.lng()
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+      return null;
+    }
+  };
 
   // Fetch orders with delivery status
   const fetchOrders = useCallback(async () => {
@@ -57,17 +89,44 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
       const ordersWithLocation: MapOrder[] = await Promise.all(
         data.map(async (order) => {
           try {
-            // In a real app, you would use Google Geocoding API
-            // For this example, we'll generate random locations around the default center
-            const location: Location = {
-              lat: defaultCenter.lat + (Math.random() - 0.5) * 0.05,
-              lng: defaultCenter.lng + (Math.random() - 0.5) * 0.05
-            };
+            // Build a properly formatted address string for Pflugerville
+            const shippingAddress = order.shippingAddress;
+            const addressString = `${shippingAddress.streetNumber} ${shippingAddress.streetName}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postalCode}`;
+            
+            let location: Location | null = null;
+            
+            // Try to geocode the address if we have meaningful address data
+            if (shippingAddress.streetName && shippingAddress.city) {
+              // Only attempt geocoding if we have the basic address components
+              if (geocoder) {
+                location = await geocodeAddress(addressString);
+              }
+            }
+            
+            // Fallback to a random location if geocoding fails or address is incomplete
+            if (!location) {
+              // Generate random locations within ~3-5 miles of the Domino's store
+              location = {
+                lat: defaultCenter.lat + (Math.random() - 0.5) * 0.08,
+                lng: defaultCenter.lng + (Math.random() - 0.5) * 0.08
+              };
+              
+              console.log(`Using random location for order ${order.id} in Pflugerville area. Address was: ${addressString}`);
+            } else {
+              console.log(`Successfully geocoded address for order ${order.id}: ${addressString}`);
+            }
             
             return { ...order, location };
           } catch (error) {
-            console.error('Error geocoding address:', error);
-            return order as MapOrder;
+            console.error('Error processing order location:', error);
+            
+            // Fallback to random location on error
+            const location: Location = {
+              lat: defaultCenter.lat + (Math.random() - 0.5) * 0.08,
+              lng: defaultCenter.lng + (Math.random() - 0.5) * 0.08
+            };
+            
+            return { ...order, location };
           }
         })
       );
@@ -86,17 +145,20 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
       setError('Failed to fetch order locations');
       console.error(err);
     }
-  }, [selectedOrderId]);
+  }, [selectedOrderId, geocoder]);
 
   // Load orders when component mounts or selected order changes
   useEffect(() => {
-    fetchOrders();
-    
-    // Refresh every 30 seconds
-    const intervalId = setInterval(fetchOrders, 30000);
-    
-    return () => clearInterval(intervalId);
-  }, [fetchOrders, selectedOrderId]);
+    // Only fetch if geocoder is available or if this is the initial load
+    if (isLoaded) {
+      fetchOrders();
+      
+      // Refresh every 30 seconds
+      const intervalId = setInterval(fetchOrders, 30000);
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [fetchOrders, isLoaded]);
 
   // Center map on selected order when it changes
   useEffect(() => {
@@ -136,7 +198,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={mapCenter}
-        zoom={13}
+        zoom={12}
         onLoad={onMapLoad}
         options={{
           streetViewControl: false,
@@ -147,6 +209,27 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
           ]
         }}
       >
+        {/* Domino's Store Marker */}
+        <Marker
+          position={defaultCenter}
+          icon={{
+            url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24'%3E%3Cpath fill='%23006491' d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E",
+            scaledSize: new window.google.maps.Size(42, 42),
+            anchor: new window.google.maps.Point(21, 42)
+          }}
+          onClick={() => setActiveMarker('dominos')}
+        >
+          {activeMarker === 'dominos' && (
+            <InfoWindow onCloseClick={() => setActiveMarker(null)}>
+              <div className="info-window">
+                <h3>Domino's Pizza</h3>
+                <p className="info-address">{dominosAddress}</p>
+                <p className="info-description">Dispatch Center</p>
+              </div>
+            </InfoWindow>
+          )}
+        </Marker>
+
         {orders.map((order) => 
           order.location && (
             <Marker
@@ -168,7 +251,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
                     <h3>Order #{order.orderNumber}</h3>
                     <p className="info-customer">{order.customerName}</p>
                     <p className="info-address">
-                      {order.shippingAddress.streetName} {order.shippingAddress.streetNumber}
+                      {order.shippingAddress.streetNumber} {order.shippingAddress.streetName}
                       <br />
                       {order.shippingAddress.postalCode} {order.shippingAddress.city}
                     </p>
@@ -177,8 +260,8 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
                       className="info-navigate-btn"
                       onClick={() => {
                         // Open Google Maps directions in a new tab
-                        const address = `${order.shippingAddress.streetName} ${order.shippingAddress.streetNumber}, ${order.shippingAddress.city}`;
-                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`, '_blank');
+                        const address = `${order.shippingAddress.streetNumber} ${order.shippingAddress.streetName}, ${order.shippingAddress.city}, ${order.shippingAddress.state}`;
+                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&origin=${encodeURIComponent(dominosAddress)}`, '_blank');
                       }}
                     >
                       Navigate
