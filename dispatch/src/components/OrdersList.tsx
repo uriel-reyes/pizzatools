@@ -116,7 +116,11 @@ const OrdersList: React.FC<OrdersListProps> = ({ onSelectOrder, selectedOrderId 
             <div className="order-address-details">
               {order.shippingAddress.postalCode} {order.shippingAddress.city}
             </div>
-            <div className="order-total">${order.totalPrice.centAmount / 100}</div>
+            <div className="order-total">
+              ${order.taxedPrice?.totalGross 
+                ? (order.taxedPrice.totalGross.centAmount / 100).toFixed(2) 
+                : (order.totalPrice.centAmount / 100).toFixed(2)}
+            </div>
           </div>
         ))}
       </div>

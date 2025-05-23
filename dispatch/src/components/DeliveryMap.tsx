@@ -310,7 +310,11 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ selectedOrderId }) => {
                       <br />
                       {order.shippingAddress.postalCode} {order.shippingAddress.city}
                     </p>
-                    <p className="info-total">${order.totalPrice.centAmount / 100}</p>
+                    <p className="info-total">
+                      ${order.taxedPrice?.totalGross 
+                        ? (order.taxedPrice.totalGross.centAmount / 100).toFixed(2) 
+                        : (order.totalPrice.centAmount / 100).toFixed(2)}
+                    </p>
                     <button 
                       className="info-navigate-btn"
                       onClick={() => {

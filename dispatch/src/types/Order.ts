@@ -27,6 +27,12 @@ export interface LineItem {
   };
 }
 
+export interface TaxedPrice {
+  totalNet: MoneyValue;
+  totalGross: MoneyValue;
+  totalTax: MoneyValue;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -36,6 +42,7 @@ export interface Order {
   createdAt: string;
   lastModifiedAt: string;
   totalPrice: MoneyValue;
+  taxedPrice?: TaxedPrice;
   shippingAddress: Address;
   billingAddress?: Address;
   lineItems: LineItem[];

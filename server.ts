@@ -227,6 +227,7 @@ app.get('/api/orders', async (req, res) => {
         createdAt: order.createdAt,
         lastModifiedAt: order.lastModifiedAt,
         totalPrice: order.totalPrice,
+        taxedPrice: order.taxedPrice,
         shippingAddress: {
           streetName: (shippingAddress as any).streetName || '',
           streetNumber: (shippingAddress as any).streetNumber || '',
