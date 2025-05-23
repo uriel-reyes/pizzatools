@@ -21,6 +21,93 @@ app.get('/orders', (req, res) => {
         res.status(500).send('Failed to retrieve orders');
     });
 });
+// New endpoint to get orders with specific state
+app.get('/api/orders', async (req, res) => {
+    const { state, stateId } = req.query;
+    if (!state || typeof state !== 'string') {
+        return res.status(400).json({ error: 'State parameter is required' });
+    }
+    try {
+        // First fetch state names
+        const statesResponse = await BuildClient_1.default
+            .states()
+            .get()
+            .execute();
+        // Create a map of state ID to state name
+        const stateMap = new Map();
+        statesResponse.body.results.forEach(state => {
+            var _a;
+            stateMap.set(state.id, {
+                name: ((_a = state.name) === null || _a === void 0 ? void 0 : _a.en) || state.key,
+                key: state.key
+            });
+        });
+        // Build the where clause based on provided parameters
+        let whereClause = `orderState = "${state}"`;
+        if (stateId && typeof stateId === 'string') {
+            whereClause += ` AND state(id="${stateId}")`;
+        }
+        const response = await BuildClient_1.default
+            .inStoreKeyWithStoreKeyValue({ storeKey: "pizza-palace-1" })
+            .orders()
+            .get({
+            queryArgs: {
+                where: whereClause
+            }
+        })
+            .execute();
+        const orders = response.body.results.map(order => {
+            var _a;
+            // Get state name from map if available
+            const stateInfo = order.state ? stateMap.get(order.state.id) : null;
+            // Extract customer information
+            const customerName = order.customerEmail ? order.customerEmail.split('@')[0] : 'Customer';
+            // Get the shipping address
+            const shippingAddress = order.shippingAddress || {};
+            return {
+                id: order.id,
+                orderNumber: order.orderNumber,
+                customerId: order.customerId || '',
+                customerName: customerName,
+                customerEmail: order.customerEmail || '',
+                createdAt: order.createdAt,
+                lastModifiedAt: order.lastModifiedAt,
+                totalPrice: order.totalPrice,
+                shippingAddress: {
+                    streetName: shippingAddress.streetName || '',
+                    streetNumber: shippingAddress.streetNumber || '',
+                    city: shippingAddress.city || '',
+                    postalCode: shippingAddress.postalCode || '',
+                    country: shippingAddress.country || '',
+                    state: shippingAddress.state || '',
+                    apartment: shippingAddress.apartment || ''
+                },
+                lineItems: order.lineItems.map(item => {
+                    var _a;
+                    return ({
+                        id: item.id,
+                        name: item.name.en,
+                        quantity: item.quantity,
+                        price: item.price.value,
+                        totalPrice: item.totalPrice,
+                        variant: {
+                            attributes: ((_a = item.variant) === null || _a === void 0 ? void 0 : _a.attributes) || []
+                        }
+                    });
+                }),
+                orderState: order.orderState,
+                stateId: ((_a = order.state) === null || _a === void 0 ? void 0 : _a.id) || '',
+                state: order.state,
+                stateInfo: stateInfo || { name: "Unknown", key: "unknown" }
+            };
+        });
+        return res.json(orders);
+    }
+    catch (error) {
+        console.error('Failed to retrieve orders:', error);
+        return res.status(500).send('Failed to retrieve orders');
+    }
+});
 // New endpoint to update order state with correct action
 app.post('/orders/:id/state', async (req, res) => {
     const orderId = req.params.id;

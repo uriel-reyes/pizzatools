@@ -1,0 +1,136 @@
+.App {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8f8f8;
+  overflow: hidden;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #e31837; /* Domino's red for the dispatch screen */
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  color: white;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.App-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.App-subtitle {
+  margin: 0 0 0 1rem;
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.App-main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dispatch-container {
+  display: flex;
+  height: 100%;
+}
+
+.orders-panel {
+  width: 320px;
+  background-color: white;
+  border-right: 1px solid #e0e0e0;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.map-panel {
+  flex: 1;
+  position: relative;
+}
+
+.App-footer {
+  background-color: #e31837; /* Domino's red */
+  color: white;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  z-index: 10;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.keyboard-instructions {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.key-instruction {
+  display: flex;
+  align-items: center;
+}
+
+.key {
+  display: inline-block;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+  font-weight: bold;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.description {
+  font-size: 0.85rem;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .dispatch-container {
+    flex-direction: column;
+  }
+  
+  .orders-panel {
+    width: 100%;
+    height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .keyboard-instructions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
