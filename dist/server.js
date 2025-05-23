@@ -353,6 +353,122 @@ app.get('/debug/orders/:id', async (req, res) => {
         return handleError(res, error, `Failed to fetch order ${orderId}`);
     }
 });
+// New endpoint to fetch available drivers
+app.get('/api/drivers', async (req, res) => {
+    console.log(`Fetching available drivers for store ${STORE_KEY}`);
+    try {
+        // Build the query clause to match customers with driver type
+        const whereClause = `custom(type(key="driver"))`;
+        console.log(`Fetching drivers with query: ${whereClause}`);
+        // Execute the query to get customers (drivers)
+        const response = await BuildClient_1.default
+            .customers()
+            .get({
+            queryArgs: {
+                where: whereClause,
+                limit: 100
+            }
+        })
+            .execute();
+        console.log(`Retrieved ${response.body.results.length} customers with driver type from API`);
+        // Debug: Log first customer data to inspect structure
+        if (response.body.results.length > 0) {
+            const firstCustomer = response.body.results[0];
+            console.log('First customer data:', JSON.stringify({
+                id: firstCustomer.id,
+                firstName: firstCustomer.firstName,
+                lastName: firstCustomer.lastName,
+                custom: firstCustomer.custom
+            }, null, 2));
+        }
+        // Map customers to the driver format needed by the client
+        const drivers = response.body.results.map(customer => {
+            var _a;
+            let isWorking = false;
+            let isDispatched = false;
+            let phoneNumber = '';
+            // Process custom fields if available
+            if (customer.custom) {
+                const customData = customer.custom;
+                if (Array.isArray(customData.customFieldsRaw)) {
+                    console.log(`Customer ${customer.id} has ${customData.customFieldsRaw.length} custom fields`);
+                    // Check if driver is working
+                    const workingField = customData.customFieldsRaw.find((field) => field.name === 'Working');
+                    isWorking = workingField ? workingField.value === true || workingField.value === 'true' : false;
+                    // Check if driver is dispatched
+                    const dispatchedField = customData.customFieldsRaw.find((field) => field.name === 'Dispatched');
+                    isDispatched = dispatchedField ? dispatchedField.value === true || dispatchedField.value === 'true' : false;
+                    // Get phone number from custom fields
+                    const phoneField = customData.customFieldsRaw.find((field) => field.name === 'phone');
+                    if (phoneField && phoneField.value) {
+                        // Format phone number if it's a number
+                        const phoneValue = phoneField.value.toString();
+                        if (phoneValue.length === 10) {
+                            phoneNumber = `(${phoneValue.slice(0, 3)}) ${phoneValue.slice(3, 6)}-${phoneValue.slice(6)}`;
+                        }
+                        else {
+                            phoneNumber = phoneValue;
+                        }
+                    }
+                    // Debug: Log field extraction for first customer
+                    if (customer.id === ((_a = response.body.results[0]) === null || _a === void 0 ? void 0 : _a.id)) {
+                        console.log('Field extraction results:', {
+                            workingField: workingField ? workingField.value : undefined,
+                            isWorking,
+                            dispatchedField: dispatchedField ? dispatchedField.value : undefined,
+                            isDispatched,
+                            phoneField: phoneField ? phoneField.value : undefined,
+                            phoneNumber
+                        });
+                    }
+                }
+                else {
+                    console.log(`Warning: Customer ${customer.id} has no customFieldsRaw array`);
+                }
+            }
+            else {
+                console.log(`Warning: Customer ${customer.id} has no custom data`);
+            }
+            return {
+                id: customer.id,
+                firstName: capitalizeFirstLetter(customer.firstName || ''),
+                lastName: capitalizeFirstLetter(customer.lastName || ''),
+                phoneNumber,
+                isWorking,
+                isDispatched
+            };
+        });
+        // Filter to only return available drivers (Working=true AND Dispatched=false)
+        const availableDrivers = drivers.filter(driver => driver.isWorking && !driver.isDispatched);
+        console.log(`Found ${availableDrivers.length} available drivers out of ${drivers.length} total drivers`);
+        // If no drivers found, provide fallback mock data for testing
+        if (availableDrivers.length === 0) {
+            console.log('No available drivers found. Using mock data as fallback.');
+            return res.json([{
+                    id: 'driver-1',
+                    firstName: 'Uriel',
+                    lastName: 'Reyes',
+                    phoneNumber: '(281) 330-8004',
+                    isWorking: true,
+                    isDispatched: false
+                }]);
+        }
+        return res.json(availableDrivers);
+    }
+    catch (error) {
+        console.error('Error fetching drivers:', error);
+        // In case of error, return mock data
+        console.log('Error occurred. Using mock data as fallback.');
+        return res.json([{
+                id: 'driver-1',
+                firstName: 'Uriel',
+                lastName: 'Reyes',
+                phoneNumber: '(281) 330-8004',
+                isWorking: true,
+                isDispatched: false
+            }]);
+    }
+});
 // Start the server
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);

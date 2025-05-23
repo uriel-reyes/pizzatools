@@ -70,6 +70,14 @@
   position: relative;
 }
 
+.drivers-panel {
+  width: 320px;
+  background-color: white;
+  border-left: 1px solid #e0e0e0;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
 .App-footer {
   background-color: #e31837; /* Domino's red */
   color: white;
@@ -113,11 +121,19 @@
     flex-direction: column;
   }
   
-  .orders-panel {
+  .orders-panel, .drivers-panel {
     width: 100%;
     height: 200px;
     border-right: none;
+    border-left: none;
+  }
+  
+  .orders-panel {
     border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .drivers-panel {
+    border-top: 1px solid #e0e0e0;
   }
   
   .keyboard-instructions {

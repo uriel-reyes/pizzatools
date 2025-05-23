@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import './App.css';
 import DeliveryMap from './components/DeliveryMap';
 import OrdersList from './components/OrdersList';
+import DriversList from './components/DriversList';
 
 // Store information - hardcoded for now but could come from config or API in the future
 const STORE_NUMBER = '9267';
 
 function App() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
 
   return (
     <div className="App">
@@ -25,6 +27,12 @@ function App() {
           </div>
           <div className="map-panel">
             <DeliveryMap selectedOrderId={selectedOrderId} />
+          </div>
+          <div className="drivers-panel">
+            <DriversList 
+              onSelectDriver={(driverId) => setSelectedDriverId(driverId)}
+              selectedDriverId={selectedDriverId}
+            />
           </div>
         </div>
       </main>
