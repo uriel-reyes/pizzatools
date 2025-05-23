@@ -145,7 +145,6 @@ For security, the Google Maps API key is stored in an environment variable:
 ### Map Features
 - Uses Google Maps JavaScript API with 'places' and 'geocoding' libraries
 - Centers on Domino's in Pflugerville, TX by default (30.466031, -97.584150)
-- Provides geocoding of customer addresses with fallback to random locations if geocoding fails
 - Displays custom markers for store location and delivery addresses
 - Includes navigation capabilities via Google Maps directions
 
