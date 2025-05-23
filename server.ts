@@ -13,6 +13,11 @@ interface StateInfo {
 }
 
 // Helper functions for reusable logic
+function capitalizeFirstLetter(str: string): string {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 async function getStateMap(): Promise<Map<string, StateInfo>> {
   // Create a map of state ID to state name
   const statesResponse = await apiRoot
@@ -198,8 +203,20 @@ app.get('/api/orders', async (req, res) => {
     // Map orders to the format expected by the Dispatch app
     const mappedOrders = orders.map(order => {
       const stateInfo = order.state ? stateMap.get(order.state.id) : null;
-      const customerName = order.customerEmail ? order.customerEmail.split('@')[0] : 'Customer';
       const shippingAddress = order.shippingAddress || {};
+      
+      // Format customer name properly using firstName and lastName from shipping address if available
+      let customerName = 'Customer'; // Default fallback
+      
+      if ((shippingAddress as any).firstName && (shippingAddress as any).lastName) {
+        // Use properly formatted first and last name
+        const firstName = capitalizeFirstLetter((shippingAddress as any).firstName);
+        const lastName = capitalizeFirstLetter((shippingAddress as any).lastName);
+        customerName = `${firstName} ${lastName}`;
+      } else if (order.customerEmail) {
+        // Fallback to email if shipping address doesn't have names
+        customerName = order.customerEmail.split('@')[0];
+      }
       
       return {
         id: order.id,

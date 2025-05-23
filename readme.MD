@@ -106,14 +106,6 @@ Will need a custom type similar to what's modeled below:
 }
 ```
 
-## Setup
-
-Each component has its own setup instructions. Please refer to the README in each directory:
-
-- Backend API: See root directory instructions
-- Makeline: See `/makeline/README.md`
-- Dispatch: See `/dispatch/README.md`
-
 ## Quickstart
 
 To run the entire system with a single command:
@@ -135,9 +127,15 @@ The backend API requires configuration for commercetools:
 
 ## Google Maps Integration
 
-The Dispatch app requires a Google Maps API key:
-- Create a `.env` file in the `/dispatch` directory
-- Add `REACT_APP_GOOGLE_MAPS_API_KEY=your_key_here`
+The Dispatch app uses Google Maps for displaying delivery locations:
+- API key is directly hardcoded in the `DeliveryMap.tsx` component for simplicity:
+  ```javascript
+  const GOOGLE_MAPS_API_KEY = 'AIzaSyBDfqFes5QLvs6FLtiMsmYcHH32pAUltzM';
+  ```
+- Uses Google Maps JavaScript API with 'places' and 'geocoding' libraries
+- Centers on Domino's in Pflugerville, TX by default (30.466031, -97.584150)
+- Provides geocoding of customer addresses with fallback to random locations if geocoding fails
+- For production, it's recommended to move this to an environment variable
 
 ## Order States
 
@@ -186,3 +184,26 @@ GET /api/orders?state=Open&stateId=118b88e6-013e-45db-8608-d8b2358ecbb4,393518bd
 - Backend: Node.js, Express, TypeScript, commercetools SDK
 - Frontend: React, TypeScript, Google Maps API
 - Styling: Custom CSS with Domino's-inspired theming
+
+## Recent Updates
+
+### Auto-Refresh Capabilities
+- **Dispatch App**: Both the order list and map components automatically refresh data every 10 seconds to ensure up-to-date delivery information.
+- **Makeline App**: Refreshes every 30 seconds to show new orders ready for preparation.
+- Auto-refresh is implemented using React's `useEffect` and `setInterval` to periodically fetch the latest data without requiring manual user intervention.
+
+### Customer Name Formatting
+- Improved display of customer names in the Dispatch app to show proper names (e.g., "Jennifer Gonzalez" instead of "jennifer.gonzalez").
+- The system now uses firstName and lastName from shipping address data with proper capitalization.
+- Falls back to email-based names only when shipping address name data is unavailable.
+
+### Multi-Status Order Support
+- The Dispatch app now supports fetching orders with multiple state IDs using comma-separated values.
+- Currently configured to show delivery orders with stateIds: 
+  - "118b88e6-013e-45db-8608-d8b2358ecbb4"
+  - "393518bd-5207-4aba-b910-81cb2e7343f4"
+- Server efficiently handles multiple IDs by building appropriate OR conditions in the database queries.
+
+### Store Identification
+- Both applications now display "Store #9267" in their titles for clear store identification.
+- This prepares the system for future multi-store functionality.

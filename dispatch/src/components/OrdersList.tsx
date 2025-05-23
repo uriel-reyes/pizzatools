@@ -43,8 +43,8 @@ const OrdersList: React.FC<OrdersListProps> = ({ onSelectOrder, selectedOrderId 
   useEffect(() => {
     fetchOrders();
     
-    // Refresh every 30 seconds
-    const intervalId = setInterval(fetchOrders, 30000);
+    // Refresh every 10 seconds
+    const intervalId = setInterval(fetchOrders, 10000);
     
     return () => clearInterval(intervalId);
   }, [fetchOrders]);

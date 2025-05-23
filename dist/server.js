@@ -10,6 +10,11 @@ const BuildClient_1 = __importDefault(require("./src/BuildClient"));
 const STORE_KEY = "9267"; // Consistent store key for all endpoints
 const port = process.env.PORT || 3001;
 // Helper functions for reusable logic
+function capitalizeFirstLetter(str) {
+    if (!str)
+        return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 async function getStateMap() {
     // Create a map of state ID to state name
     const statesResponse = await BuildClient_1.default
@@ -167,8 +172,19 @@ app.get('/api/orders', async (req, res) => {
         const mappedOrders = orders.map(order => {
             var _a;
             const stateInfo = order.state ? stateMap.get(order.state.id) : null;
-            const customerName = order.customerEmail ? order.customerEmail.split('@')[0] : 'Customer';
             const shippingAddress = order.shippingAddress || {};
+            // Format customer name properly using firstName and lastName from shipping address if available
+            let customerName = 'Customer'; // Default fallback
+            if (shippingAddress.firstName && shippingAddress.lastName) {
+                // Use properly formatted first and last name
+                const firstName = capitalizeFirstLetter(shippingAddress.firstName);
+                const lastName = capitalizeFirstLetter(shippingAddress.lastName);
+                customerName = `${firstName} ${lastName}`;
+            }
+            else if (order.customerEmail) {
+                // Fallback to email if shipping address doesn't have names
+                customerName = order.customerEmail.split('@')[0];
+            }
             return {
                 id: order.id,
                 orderNumber: order.orderNumber,
