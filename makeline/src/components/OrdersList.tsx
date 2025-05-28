@@ -41,7 +41,9 @@ interface CommerceToolsLineItem {
       Left?: string[];
       Right?: string[];
       Sauce?: string;
+      'Sauce-Type'?: string;
       Cheese?: string;
+      'Cheese-Type'?: string;
       Method?: string;
     };
   };
@@ -71,9 +73,14 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
   const [activeOrderIndex, setActiveOrderIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<string | null>(null); // Track which order is being updated
   
   // Create refs for each order item
   const orderRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Add a ref to track if a fetch is in progress
+  const fetchingRef = useRef<boolean>(false);
+  // Add a ref to prevent multiple quick updates for the same order
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Reset refs when orders change
   useEffect(() => {
@@ -92,9 +99,18 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
 
   // Fetch orders from the backend
   const fetchOrders = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (fetchingRef.current) return;
+    
     try {
+      fetchingRef.current = true;
       console.log('Fetching orders...');
-      setLoading(true);
+      
+      // Only show loading indicator for initial fetch
+      if (orders.length === 0) {
+        setLoading(true);
+      }
+      
       const response = await fetch('http://localhost:3001/orders');
       
       if (!response.ok) {
@@ -102,7 +118,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
       }
       
       const data = await response.json() as CommerceToolsOrder[];
-      console.log('Orders received:', data);
+      console.log(`Orders received: ${data.length}`);
       
       if (!Array.isArray(data)) {
         console.error('Received non-array data:', data);
@@ -110,26 +126,6 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
         return;
       }
 
-      // Debug: Check structure of the first order
-      if (data.length > 0) {
-        const firstOrder = data[0];
-        console.log('First order details:', {
-          id: firstOrder.id,
-          orderNumber: firstOrder.orderNumber,
-          lineItemsCount: firstOrder.lineItems?.length || 0
-        });
-        
-        if (firstOrder.lineItems && firstOrder.lineItems.length > 0) {
-          console.log('First line item sample:', {
-            id: firstOrder.lineItems[0].id,
-            productKey: firstOrder.lineItems[0].productKey,
-            name: firstOrder.lineItems[0].name,
-            productType: firstOrder.lineItems[0].productType,
-            custom: firstOrder.lineItems[0].custom
-          });
-        }
-      }
-      
       // Process and transform orders for display - simplify the logging
       const processedOrders = data.map(order => {
         // Filter line items to only include pizza items
@@ -168,11 +164,21 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
               
               // Add sauce and cheese info if available
               if (item.custom.fields.Sauce) {
-                ingredients.push(`Sauce: ${item.custom.fields.Sauce}`);
+                let sauceDesc = item.custom.fields.Sauce;
+                if (item.custom.fields['Sauce-Type']) {
+                  ingredients.push(`Sauce: ${sauceDesc} ${item.custom.fields['Sauce-Type']}`);
+                } else {
+                  ingredients.push(`Sauce: ${sauceDesc}`);
+                }
               }
               
               if (item.custom.fields.Cheese) {
-                ingredients.push(`Cheese: ${item.custom.fields.Cheese}`);
+                let cheeseDesc = item.custom.fields.Cheese;
+                if (item.custom.fields['Cheese-Type']) {
+                  ingredients.push(`Cheese: ${cheeseDesc} ${item.custom.fields['Cheese-Type']}`);
+                } else {
+                  ingredients.push(`Cheese: ${cheeseDesc}`);
+                }
               }
             }
             
@@ -231,7 +237,10 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
         setActiveOrderIndex(fallbackOrders.length > 0 ? 0 : -1);
       } else {
         setOrders(ordersWithPizzas);
-        setActiveOrderIndex(ordersWithPizzas.length > 0 ? 0 : -1);
+        // Only reset active index if we don't have one or if it's out of bounds
+        if (activeOrderIndex < 0 || activeOrderIndex >= ordersWithPizzas.length) {
+          setActiveOrderIndex(ordersWithPizzas.length > 0 ? 0 : -1);
+        }
       }
       
       setError(null);
@@ -240,23 +249,33 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
       setError('Failed to fetch orders. See console for details.');
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
-  }, []);
+  }, [orders.length, activeOrderIndex]);
 
   useEffect(() => {
     fetchOrders();
     
-    // Set up a polling interval to refresh orders
-    const intervalId = setInterval(fetchOrders, 30000); // Refresh every 30 seconds
+    // Set up a polling interval to refresh orders - reduced to 10 seconds for more responsive updates
+    const intervalId = setInterval(fetchOrders, 10000);
     
     return () => clearInterval(intervalId);
   }, [fetchOrders]);
 
   // Update the order status on the backend
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    if (loading) return;
+  const updateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
+    // Prevent updating if loading or already updating this order
+    if (loading || updating === orderId) return;
     
+    // Prevent multiple rapid updates
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+      updateTimeoutRef.current = null;
+    }
+    
+    setUpdating(orderId);
     setLoading(true);
+    
     try {
       console.log(`Updating order ${orderId} to ${newStatus}...`);
       const response = await fetch(`http://localhost:3001/orders/${orderId}/state`, {
@@ -298,10 +317,17 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
     } catch (error) {
       console.error(`Error updating order status:`, error);
       setError(`Failed to update order. See console for details.`);
+      
+      // Refresh orders to ensure UI is in sync with backend
+      updateTimeoutRef.current = setTimeout(() => {
+        fetchOrders();
+      }, 2000);
+      
     } finally {
       setLoading(false);
+      setUpdating(null);
     }
-  };
+  }, [loading, updating, orders.length, onOrderCompleted, fetchOrders]);
 
   // Handle keyboard navigation and actions
   const handleKeyDown = useCallback(async (event: KeyboardEvent) => {
@@ -321,14 +347,17 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
       case 'Enter':
         event.preventDefault();
         if (activeOrderIndex >= 0 && activeOrderIndex < orders.length) {
-          await updateOrderStatus(orders[activeOrderIndex].id, 'in-oven');
+          // Prevent multiple rapid Enter key presses
+          if (!updating && !loading) {
+            await updateOrderStatus(orders[activeOrderIndex].id, 'in-oven');
+          }
         }
         break;
       
       default:
         break;
     }
-  }, [orders, activeOrderIndex]);
+  }, [orders, activeOrderIndex, updateOrderStatus, updating, loading]);
 
   useEffect(() => {
     // Add event listener for keyboard navigation

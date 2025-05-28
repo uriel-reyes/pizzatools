@@ -170,7 +170,14 @@ app.get('/orders', async (req, res) => {
                   } else {
                     sauceDesc = capitalizeFirstLetter(sauceDesc);
                   }
-                  ingredients.push(`Sauce: ${sauceDesc}`);
+                  
+                  // Add sauce type if available
+                  if (customFields['Sauce-Type']) {
+                    const sauceType = customFields['Sauce-Type'];
+                    ingredients.push(`Sauce: ${sauceDesc} ${sauceType}`);
+                  } else {
+                    ingredients.push(`Sauce: ${sauceDesc}`);
+                  }
                 }
                 
                 // Add cheese info if available
@@ -184,7 +191,14 @@ app.get('/orders', async (req, res) => {
                   } else {
                     cheeseDesc = capitalizeFirstLetter(cheeseDesc);
                   }
-                  ingredients.push(`Cheese: ${cheeseDesc}`);
+                  
+                  // Add cheese type if available
+                  if (customFields['Cheese-Type']) {
+                    const cheeseType = customFields['Cheese-Type'];
+                    ingredients.push(`Cheese: ${cheeseDesc} ${cheeseType}`);
+                  } else {
+                    ingredients.push(`Cheese: ${cheeseDesc}`);
+                  }
                 }
               }
               

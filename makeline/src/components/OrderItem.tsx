@@ -10,8 +10,7 @@ interface OrderItemProps {
 }
 
 const OrderItem: React.FC<OrderItemProps> = ({ order, isActive, onComplete }) => {
-  // Debug output to console
-  console.log('Rendering OrderItem:', order);
+  // Remove the debug output that was causing excessive re-renders
   
   const activeClass = isActive ? 'active' : '';
   
