@@ -3,6 +3,65 @@ import OrderItem from './OrderItem';
 import './OrderList.css';
 import Order from '../types/Order';
 
+// Pizza product type ID constant
+const PIZZA_PRODUCT_TYPE_ID = '1950208a-8703-4ce5-b4e0-fea5fee190f3';
+const PIZZA_CUSTOM_TYPE_ID = '2e00d9bb-361b-4b73-bca2-3bc15cfaf7e5';
+
+// Types for CommerceTools order data
+interface CommerceToolsLineItem {
+  id: string;
+  productId: string;
+  productKey: string;
+  name: {
+    "en-US"?: string;
+    en?: string;
+  };
+  productType?: {
+    typeId: string;
+    id: string;
+    version?: number;
+  };
+  variant?: {
+    id: number;
+    sku: string;
+    key?: string;
+    attributes?: Array<{
+      name: string;
+      value: any;
+    }>;
+  };
+  quantity: number;
+  custom?: {
+    type: {
+      typeId: string;
+      id: string;
+    };
+    fields: {
+      Whole?: string[];
+      Left?: string[];
+      Right?: string[];
+      Sauce?: string;
+      Cheese?: string;
+      Method?: string;
+    };
+  };
+}
+
+interface CommerceToolsOrder {
+  id: string;
+  createdAt: string;
+  state: {
+    typeId: string;
+    id: string;
+  };
+  stateInfo: {
+    name: string;
+    key: string;
+  };
+  orderNumber: string;
+  lineItems: CommerceToolsLineItem[];
+}
+
 interface OrdersListProps {
   onOrderCompleted: () => void;
 }
@@ -15,6 +74,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
   
   // Create refs for each order item
   const orderRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
   // Reset refs when orders change
   useEffect(() => {
     orderRefs.current = orderRefs.current.slice(0, orders.length);
@@ -41,7 +101,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      const data = await response.json();
+      const data = await response.json() as CommerceToolsOrder[];
       console.log('Orders received:', data);
       
       if (!Array.isArray(data)) {
@@ -49,14 +109,131 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
         setError('Received invalid data format from the server');
         return;
       }
-      
-      if (data.length === 0) {
-        console.log('No orders to display');
+
+      // Debug: Check structure of the first order
+      if (data.length > 0) {
+        const firstOrder = data[0];
+        console.log('First order details:', {
+          id: firstOrder.id,
+          orderNumber: firstOrder.orderNumber,
+          lineItemsCount: firstOrder.lineItems?.length || 0
+        });
+        
+        if (firstOrder.lineItems && firstOrder.lineItems.length > 0) {
+          console.log('First line item sample:', {
+            id: firstOrder.lineItems[0].id,
+            productKey: firstOrder.lineItems[0].productKey,
+            name: firstOrder.lineItems[0].name,
+            productType: firstOrder.lineItems[0].productType,
+            custom: firstOrder.lineItems[0].custom
+          });
+        }
       }
       
-      setOrders(data);
-      // Set activeOrderIndex to 0 if there are orders, otherwise -1
-      setActiveOrderIndex(data.length > 0 ? 0 : -1);
+      // Process and transform orders for display - simplify the logging
+      const processedOrders = data.map(order => {
+        // Filter line items to only include pizza items
+        const pizzaItems = order.lineItems
+          .filter(item => {
+            // Check if it's a pizza product by product type ID
+            const isPizzaByType = item.productType?.id === PIZZA_PRODUCT_TYPE_ID;
+            
+            // Check if it has custom pizza fields
+            const hasPizzaCustomFields = item.custom?.type?.id === PIZZA_CUSTOM_TYPE_ID;
+            
+            // Check for pizza in product name or key
+            const nameLower = (item.name?.['en-US'] || item.name?.en || '').toLowerCase();
+            const keyLower = (item.productKey || '').toLowerCase();
+            const isPizzaByName = nameLower.includes('pizza') || keyLower.includes('pizza');
+            
+            return isPizzaByType || hasPizzaCustomFields || isPizzaByName;
+          })
+          .map(item => {
+            // Extract ingredients from different parts of the pizza
+            let ingredients: string[] = [];
+            
+            if (item.custom?.fields) {
+              // Collect all toppings from different sections
+              if (item.custom.fields.Whole && Array.isArray(item.custom.fields.Whole)) {
+                ingredients = [...ingredients, ...item.custom.fields.Whole];
+              }
+              
+              if (item.custom.fields.Left && Array.isArray(item.custom.fields.Left)) {
+                ingredients = [...ingredients, ...item.custom.fields.Left.map((topping: string) => `Left: ${topping}`)];
+              }
+              
+              if (item.custom.fields.Right && Array.isArray(item.custom.fields.Right)) {
+                ingredients = [...ingredients, ...item.custom.fields.Right.map((topping: string) => `Right: ${topping}`)];
+              }
+              
+              // Add sauce and cheese info if available
+              if (item.custom.fields.Sauce) {
+                ingredients.push(`Sauce: ${item.custom.fields.Sauce}`);
+              }
+              
+              if (item.custom.fields.Cheese) {
+                ingredients.push(`Cheese: ${item.custom.fields.Cheese}`);
+              }
+            }
+            
+            // Clean up ingredient names by removing " (normal)" suffix
+            ingredients = ingredients.map(ing => ing.replace(/ \(normal\)$/, ''));
+            
+            return {
+              productName: item.name?.["en-US"] || item.name?.en || "Pizza",
+              quantity: item.quantity || 1,
+              ingredients
+            };
+          });
+        
+        return {
+          ...order,
+          lineItems: pizzaItems
+        };
+      });
+      
+      // Filter out orders with no pizza items
+      const ordersWithPizzas = processedOrders.filter(order => 
+        order.lineItems && order.lineItems.length > 0
+      );
+      
+      console.log(`Found ${ordersWithPizzas.length} orders with pizza items`);
+      
+      if (ordersWithPizzas.length === 0 && data.length > 0) {
+        console.log('No pizza items found with strict filtering. Using fallback approach...');
+        
+        // Fallback: Use all line items as pizza items
+        const fallbackOrders = data.map(order => {
+          return {
+            ...order,
+            lineItems: order.lineItems.map(item => {
+              // Try to extract some meaningful info from the item
+              const productName = item.name?.["en-US"] || item.name?.en || 
+                                  item.productKey || "Pizza Item";
+              
+              // Try to find variant attributes if any
+              const variantAttributes = item.variant?.attributes || [];
+              const ingredients = variantAttributes
+                .filter(attr => attr.value)
+                .map(attr => `${attr.name}: ${attr.value}`)
+                .filter(ing => ing.length > 0);
+              
+              return {
+                productName,
+                quantity: item.quantity || 1,
+                ingredients
+              };
+            })
+          };
+        });
+        
+        setOrders(fallbackOrders);
+        setActiveOrderIndex(fallbackOrders.length > 0 ? 0 : -1);
+      } else {
+        setOrders(ordersWithPizzas);
+        setActiveOrderIndex(ordersWithPizzas.length > 0 ? 0 : -1);
+      }
+      
       setError(null);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -115,14 +292,11 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
         return orders.length > 1 ? 0 : -1;
       });
       
-      // Show a temporary success message
-      console.log(`Order ${orderId} moved to ${newStatus}`);
-      
       // Call the callback to update the completion time
       onOrderCompleted();
       
     } catch (error) {
-      console.error(`Error updating order ${orderId} to ${newStatus}:`, error);
+      console.error(`Error updating order status:`, error);
       setError(`Failed to update order. See console for details.`);
     } finally {
       setLoading(false);

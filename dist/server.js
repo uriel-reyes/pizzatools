@@ -88,11 +88,77 @@ app.get('/orders', async (req, res) => {
                 stateInfo: stateInfo || { name: "Unknown", key: "unknown" },
                 orderNumber: order.orderNumber,
                 totalItems: order.lineItems.length,
-                lineItems: order.lineItems.map(lineItem => ({
-                    productName: lineItem.name.en,
-                    quantity: lineItem.quantity,
-                    ingredients: lineItem.custom && lineItem.custom.fields ? lineItem.custom.fields.Ingredients : []
-                }))
+                lineItems: order.lineItems.map(lineItem => {
+                    var _a;
+                    // Extract name using the appropriate property path (either en-US or en)
+                    const name = lineItem.name["en-US"] || lineItem.name.en || "Pizza Item";
+                    // Extract product type and custom fields
+                    const productType = lineItem.productType || {};
+                    const customFields = ((_a = lineItem.custom) === null || _a === void 0 ? void 0 : _a.fields) || {};
+                    // Return a properly formatted line item for the makeline
+                    return {
+                        id: lineItem.id,
+                        productId: lineItem.productId,
+                        productKey: lineItem.productKey,
+                        productType: productType,
+                        name: lineItem.name,
+                        productName: name,
+                        quantity: lineItem.quantity,
+                        variant: lineItem.variant,
+                        custom: lineItem.custom,
+                        // Extract toppings/ingredients from the custom fields
+                        ingredients: (() => {
+                            let ingredients = [];
+                            // Check if we have custom fields for pizza toppings
+                            if (customFields) {
+                                // Extract toppings from Whole section
+                                if (customFields.Whole && Array.isArray(customFields.Whole)) {
+                                    ingredients = [...ingredients, ...customFields.Whole];
+                                }
+                                // Extract toppings from Left section with prefix
+                                if (customFields.Left && Array.isArray(customFields.Left)) {
+                                    ingredients = [...ingredients, ...customFields.Left.map(topping => `Left: ${topping}`)];
+                                }
+                                // Extract toppings from Right section with prefix
+                                if (customFields.Right && Array.isArray(customFields.Right)) {
+                                    ingredients = [...ingredients, ...customFields.Right.map(topping => `Right: ${topping}`)];
+                                }
+                                // Add sauce info if available
+                                if (customFields.Sauce) {
+                                    let sauceDesc = customFields.Sauce;
+                                    // Format sauce description for readability
+                                    if (sauceDesc === 'extra') {
+                                        sauceDesc = 'Extra';
+                                    }
+                                    else if (sauceDesc === 'light') {
+                                        sauceDesc = 'Light';
+                                    }
+                                    else {
+                                        sauceDesc = capitalizeFirstLetter(sauceDesc);
+                                    }
+                                    ingredients.push(`Sauce: ${sauceDesc}`);
+                                }
+                                // Add cheese info if available
+                                if (customFields.Cheese) {
+                                    let cheeseDesc = customFields.Cheese;
+                                    // Format cheese description for readability
+                                    if (cheeseDesc === 'extra') {
+                                        cheeseDesc = 'Extra';
+                                    }
+                                    else if (cheeseDesc === 'light') {
+                                        cheeseDesc = 'Light';
+                                    }
+                                    else {
+                                        cheeseDesc = capitalizeFirstLetter(cheeseDesc);
+                                    }
+                                    ingredients.push(`Cheese: ${cheeseDesc}`);
+                                }
+                            }
+                            // Clean up ingredient names by removing " (normal)" suffix
+                            return ingredients.map(ing => ing.replace(/ \(normal\)$/, ''));
+                        })()
+                    };
+                })
             };
         });
         return res.json(mappedOrders);

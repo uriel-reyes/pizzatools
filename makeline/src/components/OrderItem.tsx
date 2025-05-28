@@ -48,15 +48,20 @@ const OrderItem: React.FC<OrderItemProps> = ({ order, isActive, onComplete }) =>
 
   // Get a user-friendly display ID - either orderNumber or a shorter version of the ID
   const displayId = order.orderNumber || order.id.substring(0, 6);
+  
+  // Add a CSS class based on the order state
+  const orderStateClass = order.stateInfo?.key ? `order-state-${order.stateInfo.key}` : '';
 
   return (
-    <div className={`order-container ${activeClass}`}>
+    <div className={`order-container ${activeClass} ${orderStateClass}`}>
       <div className="order-header">
         <h2>#{displayId}</h2>
         <div className="order-meta">
           <span className="order-time">Received: {formatDate(order.createdAt)}</span>
           <span className="order-state">
-            Status: <span className="state-name">{order.stateInfo?.name || 'Preparing'}</span>
+            Status: <span className="state-name" data-status={order.stateInfo?.key || 'unknown'}>
+              {order.stateInfo?.name || 'Preparing'}
+            </span>
           </span>
         </div>
       </div>
