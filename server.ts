@@ -113,7 +113,7 @@ app.get('/orders', async (req, res) => {
       .get({
         queryArgs: {
           where: whereClause,
-          sort: ["createdAt desc"]
+          sort: ["createdAt asc"]
         }
       })
       .execute();
@@ -274,7 +274,7 @@ app.get('/api/orders', async (req, res) => {
       .get({
         queryArgs: {
           where: whereClause,
-          sort: ["createdAt desc"]
+          sort: ["createdAt asc"]
         }
       })
       .execute();
@@ -758,7 +758,7 @@ app.get('/debug/recent-orders', async (req, res) => {
       .orders()
       .get({
         queryArgs: {
-          sort: ["createdAt desc"],
+          sort: ["createdAt asc"],
           limit: 10
         }
       })

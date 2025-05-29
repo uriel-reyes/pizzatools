@@ -152,6 +152,16 @@ const OrdersList = forwardRef<OrdersListHandle, OrdersListProps>(({
     
     return order.stateInfo.name || 'Unknown';
   };
+  
+  // Sort orders by creation time - oldest first
+  const sortedOrders = [...orders].sort((a, b) => {
+    // Convert strings to Date objects for comparison
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+    
+    // Sort ascending (oldest first)
+    return dateA.getTime() - dateB.getTime();
+  });
 
   if (loading && orders.length === 0) {
     return <div className="orders-list-loading">Loading delivery orders...</div>;
@@ -196,7 +206,7 @@ const OrdersList = forwardRef<OrdersListHandle, OrdersListProps>(({
         </div>
       </h2>
       <div className="orders-list-container">
-        {orders.map((order) => (
+        {sortedOrders.map((order) => (
           <div 
             key={order.id}
             className={`order-item ${selectedOrderId === order.id ? 'selected' : ''} ${selectedOrderIds.includes(order.id) ? 'assigned' : ''} ${order.stateInfo?.key === 'in-oven' ? 'in-oven' : ''}`}
