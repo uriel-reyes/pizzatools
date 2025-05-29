@@ -692,6 +692,11 @@ app.get('/api/drivers/:id/orders', async (req, res) => {
     // Get state info map
     const stateMap = await getStateMap();
     
+    // Define state IDs for delivered and cancelled orders
+    const DELIVERED_STATE_ID = "4913a6ba-52f9-4eb3-84ad-0722ca18c94f";
+    const CANCELLED_STATE_ID = "bcd60537-7c35-4d96-87d4-56e2a905a8a5"; // Assuming this is the cancelled state ID
+    const OUT_FOR_DELIVERY_STATE_ID = "940a3d1f-fd99-402f-b836-788f13600840"; 
+    
     // Fetch each order
     const orders = [];
     for (const orderRef of deliveryOrderRefs) {
@@ -706,6 +711,22 @@ app.get('/api/drivers/:id/orders', async (req, res) => {
         
         const order = orderResponse.body;
         const stateInfo = order.state ? stateMap.get(order.state.id) : null;
+        
+        // Skip orders that are delivered or cancelled
+        if (order.state && (
+            order.state.id === DELIVERED_STATE_ID || 
+            order.state.id === CANCELLED_STATE_ID)) {
+          console.log(`Skipping order ${orderId} as it is in state: ${stateInfo?.name}`);
+          continue;
+        }
+        
+        // For active drivers, only include orders that are out for delivery
+        if (driverResponse.body.custom?.fields?.Dispatched === true && 
+            order.state?.id !== OUT_FOR_DELIVERY_STATE_ID) {
+          console.log(`Skipping order ${orderId} as driver is dispatched but order is not out for delivery`);
+          continue;
+        }
+        
         const shippingAddress = order.shippingAddress || {};
         
         // Format customer name properly
@@ -1062,7 +1083,7 @@ app.post('/api/drivers/:id/return', async (req, res) => {
     const driverVersion = driverResponse.body.version;
     const deliveryOrderIds = driverResponse.body.custom?.fields?.Deliveries || [];
     
-    // 2. Update driver to set Dispatched=false and clear Deliveries
+    // 2. Update driver to set Dispatched=false but KEEP the Deliveries list
     const updateDriverResponse = await apiRoot
       .customers()
       .withId({ ID: driverId })
@@ -1071,26 +1092,20 @@ app.post('/api/drivers/:id/return', async (req, res) => {
           version: driverVersion,
           actions: [
             {
-              action: 'setCustomType',
-              type: {
-                typeId: 'type',
-                id: '772f9b61-9804-40dc-94da-2fb88b020bd0' // Driver type ID
-              },
-              fields: {
-                ...(driverResponse.body.custom?.fields || {}),
-                Dispatched: false,
-                Deliveries: [] // Clear deliveries
-              }
+              action: 'setCustomField',
+              name: 'Dispatched',
+              value: false
             }
+            // No longer clearing the Deliveries field to preserve history
           ]
         }
       })
       .execute();
     
-    console.log(`Marked driver ${driverId} as returned`);
+    console.log(`Marked driver ${driverId} as returned (not dispatched) while preserving delivery history`);
     
     // 3. Update all associated orders to "Delivered" state (ID: 4913a6ba-52f9-4eb3-84ad-0722ca18c94f)
-    // AND clear the Driver custom field
+    // but KEEP the Driver reference
     const orderUpdates = await Promise.all(deliveryOrderIds.map(async (orderRef: any) => {
       try {
         const orderId = orderRef.id;
@@ -1104,7 +1119,7 @@ app.post('/api/drivers/:id/return', async (req, res) => {
         
         const orderVersion = orderResponse.body.version;
         
-        // Update order state and clear Driver custom field
+        // Update order state but keep the Driver field
         const updateResponse = await apiRoot
           .orders()
           .withId({ ID: orderId })
@@ -1118,18 +1133,14 @@ app.post('/api/drivers/:id/return', async (req, res) => {
                     typeId: "state",
                     id: "4913a6ba-52f9-4eb3-84ad-0722ca18c94f" // Delivered
                   }
-                },
-                {
-                  action: "setCustomField",
-                  name: "Driver",
-                  value: null // Clear the Driver field
                 }
+                // No longer clearing the Driver field to preserve history
               ]
             }
           })
           .execute();
         
-        console.log(`Updated order ${orderId} to "Delivered" state and cleared Driver field`);
+        console.log(`Updated order ${orderId} to "Delivered" state while preserving driver assignment`);
         
         return {
           orderId,
