@@ -6,6 +6,7 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative; /* For positioning the fixed buttons */
 }
 
 .drivers-list-title {
@@ -22,6 +23,30 @@
   flex: 1;
   overflow-y: auto;
   padding: 8px;
+  /* Add padding at the bottom to make room for fixed buttons */
+  padding-bottom: 120px;
+}
+
+/* Drivers section styles */
+.drivers-section {
+  margin-bottom: 16px;
+}
+
+.drivers-section-title {
+  margin: 0 0 8px 0;
+  padding: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.empty-section-message {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
 }
 
 .driver-item {
@@ -46,14 +71,60 @@
   box-shadow: 0 0 0 2px rgba(227, 24, 55, 0.3);
 }
 
+/* Style for drivers with temporary assignments */
+.driver-item.has-assignments {
+  background-color: #fff8e1;
+  border-left: 4px solid #ffa000;
+}
+
+/* Style for dispatched drivers */
+.driver-item.dispatched {
+  background-color: #f5f5f5;
+  border-left: 4px solid #9e9e9e;
+  opacity: 0.85;
+  cursor: default;
+}
+
+.driver-item.dispatched:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* For dispatched drivers in return mode */
+.driver-item.return-selectable {
+  background-color: #fffde7;
+  border-left: 4px solid #ffa000;
+  opacity: 1;
+  cursor: pointer;
+}
+
+.driver-item.return-selectable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff8e1;
+}
+
 .driver-header {
   margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .driver-name {
   font-weight: 600;
   font-size: 1.1rem;
   color: #333;
+}
+
+/* Timer for how long driver has been out */
+.driver-time-out {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e65100;
+  background-color: #fff3e0;
+  padding: 2px 8px;
+  border-radius: 12px;
 }
 
 .driver-phone {
@@ -75,6 +146,208 @@
 .driver-status.available {
   background-color: #e8f5e9;
   color: #2e7d32;
+}
+
+.driver-status.dispatched, .driver-status.out {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+/* Styles for temporary assignments display */
+.driver-assignments {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #ccc;
+  font-size: 0.85rem;
+}
+
+.assignments-header {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.assignments-count {
+  color: #e31837;
+  font-weight: 500;
+}
+
+/* Styles for assigned orders in dispatched drivers */
+.driver-assigned-orders {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+  font-size: 0.85rem;
+}
+
+.assigned-orders-header {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.assigned-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.assigned-order {
+  padding: 6px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.assigned-order-number {
+  font-weight: 600;
+  color: #e31837;
+}
+
+.assigned-order-customer {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.assigned-order-address {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Styles for the return mode with Out/In columns */
+.return-mode-container {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  padding-bottom: 60px; /* Space for action buttons */
+}
+
+.return-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.return-column-title {
+  text-align: center;
+  padding: 10px;
+  margin: 0 0 8px 0;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.out-column .return-column-title {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.in-column .return-column-title {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.return-drivers-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.empty-column-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 100px;
+  color: #757575;
+  text-align: center;
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 16px;
+}
+
+/* Style for drivers in the Out column */
+.out-column .driver-item {
+  border-left: 4px solid #e65100;
+  background-color: #fff8e1;
+}
+
+.out-column .driver-item:hover {
+  background-color: #fff3e0;
+}
+
+/* Fixed action buttons at the bottom */
+.drivers-action-buttons {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+/* Row for Out/In buttons */
+.button-row {
+  display: flex;
+  gap: 8px;
+}
+
+.button-row .driver-action-btn {
+  flex: 1;
+}
+
+.driver-action-btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.driver-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.driver-action-btn.out-btn {
+  background-color: #e31837;
+  color: white;
+}
+
+.driver-action-btn.out-btn:hover:not(:disabled) {
+  background-color: #c41230;
+}
+
+.driver-action-btn.in-btn {
+  background-color: #0078ae;
+  color: white;
+}
+
+.driver-action-btn.in-btn:hover:not(:disabled) {
+  background-color: #006491;
+}
+
+.driver-action-btn.clear-btn {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.driver-action-btn.clear-btn:hover:not(:disabled) {
+  background-color: #e0e0e0;
 }
 
 .drivers-list-loading,

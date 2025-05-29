@@ -33,6 +33,11 @@ export interface TaxedPrice {
   totalTax: MoneyValue;
 }
 
+export interface StateInfo {
+  name: string;
+  key: string;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -50,4 +55,6 @@ export interface Order {
   shipmentState?: string;
   paymentState?: string;
   stateId?: string;
+  state?: any;
+  stateInfo?: StateInfo;
 } 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 import DeliveryMap from './components/DeliveryMap';
 import OrdersList from './components/OrdersList';
@@ -10,6 +10,32 @@ const STORE_NUMBER = '9267';
 function App() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  // Track selected orders for assignment to drivers
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  // Reference to OrdersList component to trigger manual refresh
+  const ordersListRef = useRef<any>(null);
+
+  // Handle order selection for map display
+  const handleOrderSelect = (orderId: string) => {
+    setSelectedOrderId(orderId);
+  };
+
+  // Handle driver selection
+  const handleDriverSelect = (driverId: string) => {
+    setSelectedDriverId(driverId);
+  };
+
+  // Handle order selection for driver assignment
+  const handleOrderSelectionChange = (orderIds: string[]) => {
+    setSelectedOrderIds(orderIds);
+  };
+
+  // Function to refresh orders list - can be called after dispatch
+  const refreshOrders = () => {
+    if (ordersListRef.current && ordersListRef.current.refreshOrders) {
+      ordersListRef.current.refreshOrders();
+    }
+  };
 
   return (
     <div className="App">
@@ -21,8 +47,10 @@ function App() {
         <div className="dispatch-container">
           <div className="orders-panel">
             <OrdersList 
-              onSelectOrder={(orderId) => setSelectedOrderId(orderId)}
+              ref={ordersListRef}
+              onSelectOrder={handleOrderSelect}
               selectedOrderId={selectedOrderId}
+              onOrderSelectionChange={handleOrderSelectionChange}
             />
           </div>
           <div className="map-panel">
@@ -30,8 +58,10 @@ function App() {
           </div>
           <div className="drivers-panel">
             <DriversList 
-              onSelectDriver={(driverId) => setSelectedDriverId(driverId)}
+              onSelectDriver={handleDriverSelect}
               selectedDriverId={selectedDriverId}
+              selectedOrderIds={selectedOrderIds}
+              onDispatchComplete={refreshOrders}
             />
           </div>
         </div>
@@ -45,7 +75,7 @@ function App() {
             <span className="key">↓</span> <span className="description">Next Order</span>
           </div>
           <div className="key-instruction">
-            <span className="key">Enter</span> <span className="description">Mark as Delivered</span>
+            <span className="key">Enter</span> <span className="description">Select Order</span>
           </div>
         </div>
       </footer>

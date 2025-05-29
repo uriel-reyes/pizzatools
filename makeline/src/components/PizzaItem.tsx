@@ -190,10 +190,10 @@ const PizzaItem: React.FC<PizzaItemProps> = ({ pizza }) => {
           )}
         </div>
       ) : (
-        <div className="pizza-ingredients">
+      <div className="pizza-ingredients">
           <span className="no-ingredients">Plain cheese</span>
         </div>
-      )}
+        )}
     </div>
   );
 };
