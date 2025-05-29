@@ -113,7 +113,7 @@ app.get('/orders', async (req, res) => {
       .get({
         queryArgs: {
           where: whereClause,
-          sort: ["createdAt asc"]
+          sort: ["createdAt desc"]
         }
       })
       .execute();
@@ -274,7 +274,7 @@ app.get('/api/orders', async (req, res) => {
       .get({
         queryArgs: {
           where: whereClause,
-          sort: ["createdAt asc"]
+          sort: ["createdAt desc"]
         }
       })
       .execute();
@@ -758,7 +758,7 @@ app.get('/debug/recent-orders', async (req, res) => {
       .orders()
       .get({
         queryArgs: {
-          sort: ["createdAt asc"],
+          sort: ["createdAt desc"],
           limit: 10
         }
       })
@@ -965,6 +965,7 @@ app.post('/api/dispatch', async (req, res) => {
       console.log(`Updated driver ${driverId} to dispatched status with ${orderIds.length} orders`);
       
       // 3. Update each order to "Out On Delivery" state (ID: 940a3d1f-fd99-402f-b836-788f13600840)
+      // AND set the Driver custom field on each order
       const orderUpdates = await Promise.all(orderIds.map(async (orderId) => {
         try {
           // Get current order version
@@ -976,25 +977,35 @@ app.post('/api/dispatch', async (req, res) => {
           
           const orderVersion = orderResponse.body.version;
           
-          // Update order state
+          // Update order state and set Driver custom field
           const updateResponse = await apiRoot
             .orders()
             .withId({ ID: orderId })
             .post({
               body: {
                 version: orderVersion,
-                actions: [{
-                  action: "transitionState",
-                  state: {
-                    typeId: "state",
-                    id: "940a3d1f-fd99-402f-b836-788f13600840" // Out On Delivery
+                actions: [
+                  {
+                    action: "transitionState",
+                    state: {
+                      typeId: "state",
+                      id: "940a3d1f-fd99-402f-b836-788f13600840" // Out On Delivery
+                    }
+                  },
+                  {
+                    action: "setCustomField",
+                    name: "Driver",
+                    value: {
+                      typeId: "customer",
+                      id: driverId
+                    }
                   }
-                }]
+                ]
               }
             })
             .execute();
           
-          console.log(`Updated order ${orderId} to "Out On Delivery" state`);
+          console.log(`Updated order ${orderId} to "Out On Delivery" state and set Driver to ${driverId}`);
           
           return {
             orderId,
@@ -1079,6 +1090,7 @@ app.post('/api/drivers/:id/return', async (req, res) => {
     console.log(`Marked driver ${driverId} as returned`);
     
     // 3. Update all associated orders to "Delivered" state (ID: 4913a6ba-52f9-4eb3-84ad-0722ca18c94f)
+    // AND clear the Driver custom field
     const orderUpdates = await Promise.all(deliveryOrderIds.map(async (orderRef: any) => {
       try {
         const orderId = orderRef.id;
@@ -1092,25 +1104,32 @@ app.post('/api/drivers/:id/return', async (req, res) => {
         
         const orderVersion = orderResponse.body.version;
         
-        // Update order state
+        // Update order state and clear Driver custom field
         const updateResponse = await apiRoot
           .orders()
           .withId({ ID: orderId })
           .post({
             body: {
               version: orderVersion,
-              actions: [{
-                action: "transitionState",
-                state: {
-                  typeId: "state",
-                  id: "4913a6ba-52f9-4eb3-84ad-0722ca18c94f" // Delivered
+              actions: [
+                {
+                  action: "transitionState",
+                  state: {
+                    typeId: "state",
+                    id: "4913a6ba-52f9-4eb3-84ad-0722ca18c94f" // Delivered
+                  }
+                },
+                {
+                  action: "setCustomField",
+                  name: "Driver",
+                  value: null // Clear the Driver field
                 }
-              }]
+              ]
             }
           })
           .execute();
         
-        console.log(`Updated order ${orderId} to "Delivered" state`);
+        console.log(`Updated order ${orderId} to "Delivered" state and cleared Driver field`);
         
         return {
           orderId,

@@ -152,16 +152,6 @@ const OrdersList = forwardRef<OrdersListHandle, OrdersListProps>(({
     
     return order.stateInfo.name || 'Unknown';
   };
-  
-  // Sort orders by creation time - oldest first
-  const sortedOrders = [...orders].sort((a, b) => {
-    // Convert strings to Date objects for comparison
-    const dateA = new Date(a.createdAt);
-    const dateB = new Date(b.createdAt);
-    
-    // Sort ascending (oldest first)
-    return dateA.getTime() - dateB.getTime();
-  });
 
   if (loading && orders.length === 0) {
     return <div className="orders-list-loading">Loading delivery orders...</div>;
@@ -206,7 +196,7 @@ const OrdersList = forwardRef<OrdersListHandle, OrdersListProps>(({
         </div>
       </h2>
       <div className="orders-list-container">
-        {sortedOrders.map((order) => (
+        {orders.map((order) => (
           <div 
             key={order.id}
             className={`order-item ${selectedOrderId === order.id ? 'selected' : ''} ${selectedOrderIds.includes(order.id) ? 'assigned' : ''} ${order.stateInfo?.key === 'in-oven' ? 'in-oven' : ''}`}
@@ -221,24 +211,24 @@ const OrdersList = forwardRef<OrdersListHandle, OrdersListProps>(({
               />
             </div>
             <div className="order-content">
-              <div className="order-header">
-                <span className="order-id">#{order.orderNumber}</span>
-                <span className="order-time">{new Date(order.createdAt).toLocaleTimeString()}</span>
-              </div>
-              <div className="order-customer">{order.customerName}</div>
-              <div className="order-address">{order.shippingAddress.streetName} {order.shippingAddress.streetNumber}</div>
-              <div className="order-address-details">
-                {order.shippingAddress.postalCode} {order.shippingAddress.city}
-              </div>
+            <div className="order-header">
+              <span className="order-id">#{order.orderNumber}</span>
+              <span className="order-time">{new Date(order.createdAt).toLocaleTimeString()}</span>
+            </div>
+            <div className="order-customer">{order.customerName}</div>
+            <div className="order-address">{order.shippingAddress.streetName} {order.shippingAddress.streetNumber}</div>
+            <div className="order-address-details">
+              {order.shippingAddress.postalCode} {order.shippingAddress.city}
+            </div>
               <div className="order-state-info">
                 <span className={`order-state ${order.stateInfo?.key || 'unknown'}`}>
                   {getReadableStateName(order)}
                 </span>
               </div>
-              <div className="order-total">
-                ${order.taxedPrice?.totalGross 
-                  ? (order.taxedPrice.totalGross.centAmount / 100).toFixed(2) 
-                  : (order.totalPrice.centAmount / 100).toFixed(2)}
+            <div className="order-total">
+              ${order.taxedPrice?.totalGross 
+                ? (order.taxedPrice.totalGross.centAmount / 100).toFixed(2) 
+                : (order.totalPrice.centAmount / 100).toFixed(2)}
               </div>
             </div>
           </div>

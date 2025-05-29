@@ -108,7 +108,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
       
       // Only show loading indicator for initial fetch
       if (orders.length === 0) {
-        setLoading(true);
+      setLoading(true);
       }
       
       const response = await fetch('http://localhost:3001/orders');
@@ -125,7 +125,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
         setError('Received invalid data format from the server');
         return;
       }
-
+      
       // Process and transform orders for display - simplify the logging
       const processedOrders = data.map(order => {
         // Filter line items to only include pizza items
@@ -349,7 +349,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ onOrderCompleted }) => {
         if (activeOrderIndex >= 0 && activeOrderIndex < orders.length) {
           // Prevent multiple rapid Enter key presses
           if (!updating && !loading) {
-            await updateOrderStatus(orders[activeOrderIndex].id, 'in-oven');
+          await updateOrderStatus(orders[activeOrderIndex].id, 'in-oven');
           }
         }
         break;
